@@ -3,7 +3,7 @@
 ## _Quick walkthrough_
 1. The script is split into 2 parts for ease of debugging and tracing problems with custom labels from raw CSVs
 2. `generateLabels.py` will take in up to 4 platforms' csv to sanitize, outputting `standardized_columns.csv`
-3. `merge.py` will take `standardized_columns.csv` and merge all orders with the same ID or same address and receiver into a single label [WIP: the labels' packaging doesn't really work], outputting `merged_labels.csv`
+3. `merge.py` will take `standardized_columns.csv` and merge all orders with the same ID or same address and receiver into a single label, outputting `merged_labels.csv`
 4. To use this, simply extract the zip anywhere and replace the "_orders.csv" with your own and execute `generateLabels.py` then once it is complete (`standardized_columns.csv` appears), run `merge.py`. 
 
 #### `generateLabels.py`
@@ -15,6 +15,29 @@
 
 #### `merge.py`
 > this script will deal with everything involving multiple rows, hence the name merge
+- this script requires the previous step CSV to be named exactly `standardized_columns.csv`
+- if any unrecognisable envelope names are found, Error will be appended to its name
+- this operates with the assumption as below
+```
+untracked:
+every 3 small will be equivalent to 1 c5 
+every 2 c5 will be equivalent to 1 c4
+every 2 c4 will be equivalent to 1 parcel-medium
+every 3 parcel-medium = 1 parcel exlarge
+
+tracked:
+every 2 tmp-small will be equivalent to 1 tmp-c5 
+every 2 tmp-c5 will be equivalent to 1 parcel-medium
+every 3 parcel-medium = 1 parcel exlarge
+
+express:
+every 3 express = 1 parcel-express
+```
+- it operates based on MINIMUM capacity, as defined in the files, and all computation is literally just summing the MINIMUM required capacity, then picking the closest one (capacity of 30 will return Parcel-Medium rather than Parcel-ExLarge)
+- skips everything with only 1 packaging (no need to waste time computing merge with nothing)
+- skips ? (please fix in listings)
+- hierarchy diagram 
+![Packages Diagram](images/package-hierarchy.png)
 
 ## HOW TO RUN
 1. Download the latest Python (At the time of writing, I used python 3.13) https://www.python.org/downloads/

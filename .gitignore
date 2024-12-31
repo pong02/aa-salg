@@ -1,11 +1,11 @@
 # Ignore all files except Python files
 *
 
-# Allow .py files
+# Allowed files
 !*.py
-
-# Allow .md files
+!*.png
 !*.md
+!images
 
 # Ignore CSV files
 *.csv
