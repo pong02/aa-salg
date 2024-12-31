@@ -4,6 +4,9 @@
 # Allow .py files
 !*.py
 
+# Allow .md files
+!*.md
+
 # Ignore CSV files
 *.csv
 
