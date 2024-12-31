@@ -1,4 +1,150 @@
 import pandas as pd
+import re
+from collections import defaultdict
+
+def removePlatform(input_string):
+    """
+    Removes everything before and including the first '/' in the input string.
+    """
+    return re.sub(r'^.*?/', '', input_string)
+
+def parseLabelCounts(label):
+    """
+    Parses a custom_label string to count occurrences of types in the second bracket,
+    and sums the multipliers after '*' for each type.
+
+    Parameters:
+        label (str): The input custom_label string.
+
+    Returns:
+        dict: A dictionary with the content of the second bracket as keys and their summed multipliers as values.
+    """
+    # Initialize the dictionary to store counts of each type
+    counts = defaultdict(int)
+    
+    # Step 1: Remove spaces and standardize separators
+    label = label.replace(' ', '').replace(',[', '|[')
+
+    # Step 2: Split the label by '|', which now separates each individual label
+    parts = label.split('|')
+
+    # Step 3: Process each part of the label
+    for part in parts:
+        # Remove everything before and including the first '/'
+        part = removePlatform(part)
+
+        # Extract the second bracket content
+        match_bracket = re.search(r'\[(.*?)\]', part)
+        if match_bracket:
+            type_content = match_bracket.group(1)
+            
+            # Ensure the type is in the dictionary with an initial value of 0
+            if type_content not in counts:
+                counts[type_content] = 0
+            
+            # Find all multipliers in the part and sum them
+            multipliers = re.findall(r'\*(\d+)', part)
+            total_multiplier = sum(int(m) for m in multipliers) if multipliers else 1
+
+            # Add the total multiplier to the type content's count
+            counts[type_content] += total_multiplier
+    
+    return dict(counts)
+
+def mergePackaging(packagingDict):
+    """
+    Calculate the most suitable envelope size based on total capacity in small-equivalents.
+
+    Parameters:
+        envelope_counts (dict): A dictionary with envelope types as keys and their counts as values.
+
+    Returns:
+        str: The most suitable envelope size.
+    """
+
+    ## why process when only 1 item
+    if len(packagingDict) == 1:  # Check if dictionary length is 1
+        key, value = list(packagingDict.items())[0]  # Access the single key-value pair
+        if value == 1:
+            return key
+    
+    # Capacity map: Define the minimum capacity threshold for each package type
+    capacity_map = {
+        'Small': 1,                  # Small = 1
+        'C5': 3,                     # Minimum for C5
+        'C4': 6,                     # Minimum for C4
+        'Parcel-Medium': 12,         # Minimum for Parcel-Medium
+        'Parcel-ExLarge': 36,        # Minimum for Parcel-ExLarge
+    }
+    capacity_map_tracked = {
+        'TMP-Small': 1,              # Same as Small
+        'TMP-C5': 3,                 # Same as C5
+        'Parcel-Medium': 12,         # Same as Parcel-Medium
+        'Parcel-ExLarge': 36,        # Same as Parcel-ExLarge
+    }
+    capacity_map_express = {
+        'Express': 3,                # Same as C5
+        'Parcel-Express': 9         # Minimum for Parcel-Express
+    }
+    capacity_map_all = {
+        'small': 1,
+        'c5': 3,
+        'c4': 6,
+        'parcel-medium': 12,
+        'parcel-exlarge': 36,
+        'tmp-small': 1,
+        'tmp-c5': 3,
+        'parcel-medium': 12,
+        'parcel-exLarge': 36,
+        'express': 3,
+        'parcel-express': 36
+    }
+
+    cap_map = capacity_map
+    #when we get an input, we multiply and get min capacity needed
+    total_capacity = 0
+    for envelope,number in packagingDict.items():
+        if envelope == "?":
+            return "?"
+        try:
+            total_capacity += capacity_map_all[envelope.lower()]*number
+        except KeyError as e:
+            return "Error:"+envelope
+        if "Express" in envelope:
+            cap_map = capacity_map_express
+        elif "TMP" in envelope or "Parcel" in envelope:
+            cap_map = capacity_map_tracked
+
+    previous_envelope= ""
+    for envelope,cap in cap_map.items():
+        if total_capacity == envelope:
+            return envelope
+        elif total_capacity > cap:
+            previous_envelope = envelope
+        elif total_capacity < cap:
+            return previous_envelope
+    return previous_envelope
+
+def extractItems(label):
+    cleaned_label = re.sub(r'\[.*?\]/\[.*?\]', '', label).replace(' ','').replace(',',', ')
+    return cleaned_label.strip()
+    
+def smartPackaging(label):
+    match = re.search(r'\[(.*?)\]', label)
+    platform = match.group(1) if match else '?' 
+    allPackaging = parseLabelCounts(label)
+    allItems = extractItems(label)
+    # print("["+platform+"]/["+mergePackaging(allPackaging)+"]"+allItems)
+    return "["+platform+"]/["+mergePackaging(allPackaging)+"]"+allItems
+
+def finishUpLabel(label):
+    label = label.replace(' ', '').replace(',', ', ').replace('*', ' *')
+    
+    # Add a space after ] if followed by an alphabet
+    label = re.sub(r'\](?=[A-Za-z])', '] ', label)
+
+    return label.strip()
+
 
 def fill_missing_details(df):
     """
@@ -59,6 +205,12 @@ def merge_orders(input_csv, output_csv):
         })
         .reset_index()
     )
+
+    # Smart Packaging calculation
+    merged_df['custom_label'] = merged_df['custom_label'].astype(str).apply(lambda x: smartPackaging(x)) 
+    
+    # Final touches to make label readable
+    merged_df['custom_label'] = merged_df['custom_label'].astype(str).apply(lambda x: finishUpLabel(x)) 
 
     # Rearrange columns to match the desired order
     column_order = ['id', 'rname', 'address', 'city', 'state', 'zip', 'custom_label', 'Quantity']

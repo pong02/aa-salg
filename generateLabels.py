@@ -7,6 +7,9 @@ TRACKING_AMT = 30
 COLUMN_MAPPING = {
     'shopify': {
         'name': 'id', 'shipping name': 'rname',
+        'billing company': 'bcompany', 'billing street': 'bstreet' ,
+        'billing city': 'bcity', 'billing zip': 'bzip',
+        'billing province': 'bstate', 'billing name': 'bname',
         'shipping street': 'street', 'shipping address 1': 'address1',
         'shipping address 2': 'address2', 'shipping company': 'company',
         'shipping city': 'city', 'shipping zip': 'zip',
@@ -161,7 +164,37 @@ def process_file(filepath, platform):
     '''
     if platform == 'shopify':
         df['custom_label'] = df['custom_label'].astype(str).apply(lambda x: cleanCustomLabel(x))
-        df['address'] = df['company'] + ' ' + df['street']
+        """
+        handle shopify cases with NO SHIPPING DETAILS
+        """
+        df['address'] = df.apply(
+            lambda row: f"{row['bcompany']} {row['bstreet']}" if pd.isna(row['street']) or row['street'].strip() == '' 
+            else f"{row['company']} {row['street']}", 
+            axis=1
+        )
+        df['city'] = df.apply(
+            lambda row: row['bcity'] if pd.isna(row['city']) or row['city'].strip() == '' 
+            else row['city'], 
+            axis=1
+        )
+
+        df['zip'] = df.apply(
+            lambda row: row['bzip'] if pd.isna(row['zip']) or row['zip'].strip() == '' 
+            else row['zip'], 
+            axis=1
+        )
+
+        df['state'] = df.apply(
+            lambda row: row['bstate'] if pd.isna(row['state']) or row['state'].strip() == '' 
+            else row['state'], 
+            axis=1
+        )
+
+        df['rname'] = df.apply(
+            lambda row: row['bname'] if pd.isna(row['rname']) or row['rname'].strip() == '' 
+            else row['rname'], 
+            axis=1
+        )
         df['shipping_method'] = df['tags'].str.contains('kogan', case=False, na=False).apply(
             lambda x: "tracking" if x else "untracked"
         )
@@ -210,6 +243,7 @@ def process_file(filepath, platform):
         df['custom_label'] = df['custom_label'].str.replace('[UB-','[')
         df['custom_label'] = df['custom_label'].str.replace(r'^\[KG\]/', '', regex=True)
         df['custom_label'] = df['custom_label'].astype(str).apply(lambda x: addPlatform(x, "KG"))
+        df['custom_label'] = df.apply(lambda row: replaceLabel(row['custom_label'], " "), axis=1) #KG doesnt need shipping edit
         df['zip'] = df['zip'].astype(str).str.extract(r'(\d{4})', expand=False)
         df['custom_label'] = df.apply(multiplyCustomLabel, axis=1)
         df['Quantity'] = 1
@@ -229,10 +263,10 @@ def process_file(filepath, platform):
         df['custom_label'] = df.apply(multiplyCustomLabel, axis=1)
         df['Quantity'] = 1
 
+    #finishing up
     df['address'] = df['address'].str.strip()
     if 'rname' in df.columns:
         df['rname'] = df['rname'].str.strip()
-
     df.reset_index(drop=True, inplace=True)
     return df
 
