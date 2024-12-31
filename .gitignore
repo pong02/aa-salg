@@ -1,0 +1,16 @@
+# Ignore all files except Python files
+*
+
+# Allow .py files
+!*.py
+
+# Ignore CSV files
+*.csv
+
+# Ignore macOS metadata files
+.DS_Store
+._*
+.MACOSX/
+
+# Optional: Ignore any other unwanted metadata
+Thumbs.db
