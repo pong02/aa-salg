@@ -29,7 +29,8 @@ COLUMN_MAPPING = {
         'custom label': 'custom_label', 'post to name': 'rname',
         'post to address 1': 'address1', 'post to address 2': 'address2',
         'post to city': 'city', 'post to state': 'state',
-        'post to postal code': 'zip'
+        'post to postal code': 'zip',
+        'sold for':'amt'
     },
     'catch': {
         'order number': 'id', 'quantity': 'Quantity',
