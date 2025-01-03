@@ -64,6 +64,7 @@ def multiplyCustomLabel(row):
 
     updated_labels = []
     custom_labels = row['custom_label'].split(',')  # Split multiple labels
+    print("=======\n",custom_labels)
 
     for label in custom_labels:
         multiplier = int(row['Quantity'])  # Default to the row's Quantity
@@ -114,7 +115,7 @@ def trackingUpgrade(envelope):
         return "Parcel-Medium"
     elif "parcel" in envelope.lower():
         return envelope # parcels are already tracked by default
-    return "TMP-C5"
+    return envelope
 
 def expressUpgrade(envelope):
     if envelope == "C4":
@@ -213,6 +214,8 @@ def process_file(filepath, platform):
     elif platform == 'ebay':
         df['custom_label'] = df['custom_label'].astype(str).apply(lambda x: cleanCustomLabel(x))
         df = df[~df['id'].str.contains('record\\(s\\) downloaded', case=False, na=False)]
+        df['amt'] = pd.to_numeric(df['amt'].str.replace('AU $', '', regex=False), errors='coerce')
+        df['amt'].fillna(0, inplace=True)
         df['address'] = df.apply(
             lambda row: row['address1'] + ' ' + row['address2'] if 'ebay:' not in row['address1'].lower() else row['address2'],
             axis=1
@@ -281,14 +284,15 @@ def read_and_standardize(directory):
             platform = filename.split('_')[0].lower()  # Extract platform name
             filepath = os.path.join(directory, filename)
             print("----------------------------------------------------------------")
-            print(f"Processing file: {filename}, Detected platform: {platform}")  # Debugging
-            print("================================================================")
+            print(f"Processing file: {filename}, Detected platform: {platform}")
             df = process_file(filepath, platform)
             
             # Skip empty DataFrames
             if not df.empty:
                 df['source_platform'] = platform  # Add a column to identify the source
                 all_data.append(df)
+            
+            print("================================================================")
 
     # Combine all data into a single DataFrame
     if all_data:
