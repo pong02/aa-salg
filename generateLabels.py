@@ -216,6 +216,7 @@ def process_file(filepath, platform):
             lambda row: row['address1'] + ' ' + row['address2'] if 'ebay:' not in row['address1'].lower() else row['address2'],
             axis=1
         )
+        df['shipping_method'] = df['amt'].astype(float).apply(lambda x: 'tracking' if x >= TRACKING_AMT else 'untracked')
         shippingMethod = df['shipping_method'].str.lower()
         df['shipping_method'] = shippingMethod.apply(
             lambda x: 
