@@ -63,11 +63,9 @@ def mergePackaging(packagingDict):
     """
 
     ## why process when only 1 item
-    print("================\nChecking:",packagingDict)
     if len(packagingDict) == 1:  # Check if dictionary length is 1
         key, value = list(packagingDict.items())[0]  # Access the single key-value pair
         if int(value) == 1:
-            print("> skipped")
             return key
     
     # Capacity map: Define the minimum capacity threshold for each package type

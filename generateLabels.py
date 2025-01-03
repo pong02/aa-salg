@@ -64,7 +64,6 @@ def multiplyCustomLabel(row):
 
     updated_labels = []
     custom_labels = row['custom_label'].split(',')  # Split multiple labels
-    print("=======\n",custom_labels)
 
     for label in custom_labels:
         multiplier = int(row['Quantity'])  # Default to the row's Quantity
