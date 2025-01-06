@@ -117,7 +117,7 @@ def mergePackaging(packagingDict):
 
     previous_envelope= ""
     for envelope,cap in cap_map.items():
-        if total_capacity == envelope:
+        if total_capacity == cap:
             return envelope
         elif total_capacity > cap:
             previous_envelope = envelope
