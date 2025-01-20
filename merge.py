@@ -128,14 +128,56 @@ def mergePackaging(packagingDict):
 def extractItems(label):
     cleaned_label = re.sub(r'\[.*?\]/\[.*?\]', '', label).replace(' ','').replace(',',', ')
     return cleaned_label.strip()
+
+def isNormalDelivery(string):
+    keywords = ['tmp','express','parcel']
+    for keyword in keywords:
+        if keyword in string.lower():
+            return False
+    return True
+
+def dumbPackaging(items):
+    cableList = read_cable_codes('cables.csv')
+    print(items)
+    itemList = items.split(', ')
+    count = 0
+    itemListLength = 0
+    for item in itemList:
+        print(item)
+        itemName, quantity = item.split('*')
+        itemListLength += int(quantity)
+        if itemName in cableList:
+            print("ye")
+            count += int(quantity)
+    if count == itemListLength: # Only when ALL products are of cable type
+        if count < 3:
+            print("c5")
+            return "C5"
+        elif count >= 3 and count <= 4:
+            print("c4")
+            return "C4"
+        elif count >= 5 and count <= 10:
+            print("pm")
+            return "Parcel-Medium"
+        else:
+            print("pxl")
+            "Parcel-ExLarge"
+    else:
+        print("fall back to smart")
+        return None
     
 def smartPackaging(label):
     match = re.search(r'\[(.*?)\]', label)
     platform = match.group(1) if match else '?' 
     allPackaging = parseLabelCounts(label)
     allItems = extractItems(label)
-    # print("["+platform+"]/["+mergePackaging(allPackaging)+"]"+allItems)
-    return "["+platform+"]/["+mergePackaging(allPackaging)+"]"+allItems
+    finalPackaging = mergePackaging(allPackaging)
+    hardPackaging = dumbPackaging(allItems)
+    if (hardPackaging != None and isNormalDelivery(finalPackaging)):
+        # override smart packaging for cables
+        finalPackaging = hardPackaging
+    
+    return "["+platform+"]/["+finalPackaging+"]"+allItems
 
 def finishUpLabel(label):
     label = label.replace(' ', '').replace(',', ', ').replace('*', ' *')
@@ -145,6 +187,10 @@ def finishUpLabel(label):
 
     return label.strip()
 
+def read_cable_codes(file_path):
+    df = pd.read_csv(file_path)
+    data_array = df.iloc[:, 0].tolist()
+    return data_array
 
 def fill_missing_details(df):
     """
