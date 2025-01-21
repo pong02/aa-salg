@@ -143,24 +143,24 @@ def dumbPackaging(items):
     count = 0
     itemListLength = 0
     for item in itemList:
-        print(item)
-        itemName, quantity = item.split('*')
+        if '*' in item:
+            # Split only if the expected delimiter is present
+            itemName, quantity = item.split('*')
+        else:
+            # Provide default values when the split fails
+            itemName, quantity = item, "1"  # Default quantity to 1
+
         itemListLength += int(quantity)
         if itemName in cableList:
-            print("ye")
             count += int(quantity)
     if count == itemListLength: # Only when ALL products are of cable type
         if count < 3:
-            print("c5")
             return "C5"
         elif count >= 3 and count <= 4:
-            print("c4")
             return "C4"
         elif count >= 5 and count <= 10:
-            print("pm")
             return "Parcel-Medium"
         else:
-            print("pxl")
             "Parcel-ExLarge"
     else:
         print("fall back to smart")
