@@ -15,13 +15,15 @@ COLUMN_MAPPING = {
         'shipping city': 'city', 'shipping zip': 'zip',
         'shipping province': 'state', 'tags': 'tags',
         'lineitem sku': 'custom_label', 'lineitem quantity': 'Quantity',
-        'shipping method': 'shipping_method', 'notes': 'notes', 'notes attribute': 'notes_attribute'
+        'shipping method': 'shipping_method', 'notes': 'notes', 'notes attribute': 'notes_attribute',
+        'total':'amt'
     },
     'kogan': {
         'deliveryname': 'rname', 'deliveryaddress1': 'address1',
         'deliveryaddress2': 'address2', 'deliverysuburb': 'city',
         'deliverystate': 'state', 'deliverypostcode': 'zip',
-        'quantity': 'Quantity', 'productcode': 'custom_label', 'labelinfo': 'id'
+        'quantity': 'Quantity', 'productcode': 'custom_label', 'labelinfo': 'id',
+        'itemprice':'amt'
     },
     'ebay': {
         'order number': 'id', 'buyer username': 'buyer_username',
