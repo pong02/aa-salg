@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import re
 
-TRACKING_AMT = 30
+TRACKING_AMT = 15
 # Define the standard column names for each platform
 COLUMN_MAPPING = {
     'shopify': {
@@ -199,6 +199,7 @@ def process_file(filepath, platform):
         df['shipping_method'] = df['tags'].str.contains('kogan', case=False, na=False).apply(
             lambda x: "tracking" if x else "untracked"
         )
+        df['shipping_method'] = df['amt'].astype(float).apply(lambda x: 'tracking' if x >= TRACKING_AMT else 'untracked')
         df.loc[df['tags'].str.contains('mydeal', case=False, na=False), 'custom_label'] = (
             df['custom_label']
             .str.replace("TMP-Small", "C5", case=False)
@@ -251,6 +252,7 @@ def process_file(filepath, platform):
     elif platform == 'kogan':
         df['custom_label'] = df['custom_label'].astype(str).apply(lambda x: cleanCustomLabel(x))
         df['address'] = df['address1'] + ' ' + df['address2'].astype(str)
+        df['shipping_method'] = df['amt'].astype(float).apply(lambda x: 'tracking' if x >= TRACKING_AMT else 'untracked')
         df['custom_label'] = df['custom_label'].str.lstrip('NEX-')
         df['custom_label'] = df['custom_label'].str.replace('[KG-','[')
         df['custom_label'] = df['custom_label'].str.replace('[USAMS-','[')
