@@ -202,11 +202,8 @@ def process_file(filepath, platform):
             lambda x: "tracking" if x else "untracked"
         )
         
-        df['shipping_method'] = df['amt'].astype(float).apply(lambda x: 'tracking' if x >= TRACKING_AMT else 'untracked')
-        df.loc[df['tags'].str.contains('mydeal', case=False, na=False), 'custom_label'] = (
-            df['custom_label']
-            .str.replace("TMP-Small", "C5", case=False)
-            .str.replace("TMP-C5", "C5", case=False)
+        df.loc[df['shipping_method'] == "untracked", 'shipping_method'] = df['amt'].astype(float).apply(
+            lambda x: "tracking" if x >= TRACKING_AMT else "untracked"
         )
         
         df['custom_label'] = df['custom_label'].str.replace(r'^\[SP\]/', '', regex=True)
