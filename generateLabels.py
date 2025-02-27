@@ -201,6 +201,10 @@ def process_file(filepath, platform):
         df['shipping_method'] = df['tags'].str.contains(r'kogan|mydeal', case=False, na=False).apply(
             lambda x: "tracking" if x else "untracked"
         )
+
+        df['amt'] = df['amt'].fillna(0)  # Replace NaN with 0 to avoid conversion errors
+        df['amt'] = df['amt'].replace('', 0).astype(float)  # Convert empty strings to 0 before converting to float
+
         
         df.loc[df['shipping_method'] == "untracked", 'shipping_method'] = df['amt'].astype(float).apply(
             lambda x: "tracking" if x >= TRACKING_AMT else "untracked"
@@ -252,6 +256,7 @@ def process_file(filepath, platform):
     elif platform == 'kogan':
         df['custom_label'] = df['custom_label'].astype(str).apply(lambda x: cleanCustomLabel(x))
         df['address'] = df['address1'] + ' ' + df['address2'].astype(str)
+        df['amt'].fillna(0, inplace=True)
         df['shipping_method'] = df['amt'].astype(float).apply(lambda x: 'tracking' if x >= TRACKING_AMT else 'untracked')
         df['custom_label'] = df['custom_label'].str.lstrip('NEX-')
         df['custom_label'] = df['custom_label'].str.replace('[KG-','[')
@@ -271,6 +276,7 @@ def process_file(filepath, platform):
         df['custom_label'] = df['custom_label'].astype(str).apply(lambda x: cleanCustomLabel(x))
         df['address'] = df['company'] + ' ' + df['address1'].fillna('') + ' ' + df['address2']
         df['rname'] = df['fname'] + ' ' + df['lname']
+        df['amt'].fillna(0, inplace=True)
         df['shipping_method'] = df['amt'].astype(float).apply(lambda x: 'tracking' if x >= TRACKING_AMT else 'untracked')
         df['custom_label'] = df['custom_label'].str.replace(r'^\[C\]/', '', regex=True)
         df['custom_label'] = df['custom_label'].astype(str).apply(lambda x: addPlatform(x, "C"))
