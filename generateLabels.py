@@ -198,9 +198,10 @@ def process_file(filepath, platform):
             else row['rname'], 
             axis=1
         )
-        df['shipping_method'] = df['tags'].str.contains('kogan', case=False, na=False).apply(
+        df['shipping_method'] = df['tags'].str.contains(r'kogan|mydeal', case=False, na=False).apply(
             lambda x: "tracking" if x else "untracked"
         )
+        
         df['shipping_method'] = df['amt'].astype(float).apply(lambda x: 'tracking' if x >= TRACKING_AMT else 'untracked')
         df.loc[df['tags'].str.contains('mydeal', case=False, na=False), 'custom_label'] = (
             df['custom_label']
