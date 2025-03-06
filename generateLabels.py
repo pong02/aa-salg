@@ -239,7 +239,7 @@ def process_file(filepath, platform):
                 else ""
         )
         df['shipping_method'] = df.apply(
-            lambda row: 'tracking' if row['amt'] >= TRACKING_AMT and row['shipping_method'] != 'tracking' 
+            lambda row: 'tracking' if row['amt'] > 0 and row['shipping_method'] != 'tracking' 
                         else row['shipping_method'], 
             axis=1
         )
