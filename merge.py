@@ -262,6 +262,8 @@ def merge_orders(input_csv, output_csv):
     column_order = ['id', 'rname', 'address', 'city', 'state', 'zip', 'custom_label', 'Quantity']
     merged_df = merged_df[column_order]
 
+    merged_df = merged_df.drop(columns=['Quantity'])
+
     # Save the merged DataFrame to the output CSV file
     merged_df.to_csv(output_csv, index=False)
     print(f"Merged data has been saved to: {output_csv}")
