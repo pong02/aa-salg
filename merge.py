@@ -2,6 +2,10 @@ import pandas as pd
 import re
 from collections import defaultdict
 
+def has_two_hyphens(s):
+    return str(s).count('-') >= 2
+
+
 def removePlatform(input_string):
     """
     Removes everything before and including the first '/' in the input string.
@@ -263,6 +267,21 @@ def merge_orders(input_csv, output_csv):
     merged_df = merged_df[column_order]
 
     merged_df = merged_df.drop(columns=['Quantity'])
+
+    # Prepare for Sorting with custom order
+    merged_df['sort'] = merged_df['custom_label'].str.split(']').str[-1].str.replace(" ", "", regex=True)
+    merged_df['sort'] = merged_df['sort'].fillna("???").replace("", "???")
+
+    # Apply sorting rules:
+    # - Items with at least two '-' are sorted alphabetically.
+    # - Items without at least two '-' (including empty strings or NaNs) are placed at the end.
+    merged_df['sort_key'] = merged_df['sort'].apply(lambda x: (0, x) if has_two_hyphens(x) else (1, x))
+
+    # Sort the DataFrame based on the defined sort key
+    merged_df = merged_df.sort_values(by='sort_key')
+
+    # Drop the temporary sorting key column
+    merged_df = merged_df.drop(columns=['sort_key'])
 
     # Save the merged DataFrame to the output CSV file
     merged_df.to_csv(output_csv, index=False)
