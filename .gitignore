@@ -5,6 +5,8 @@
 !*.py
 !*.png
 !*.md
+!*.sh
+!*.ps1
 !images
 
 # Ignore CSV files

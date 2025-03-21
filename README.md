@@ -96,4 +96,7 @@ to install the python package manager, which allows you to install dependencies 
 ```bash
 pip install pandas
 ```
-
+To use the startup script without typing commands, please make sure to paste this in powershell as ADMIN
+```bash
+Set-ExecutionPolicy RemoteSigned
+```

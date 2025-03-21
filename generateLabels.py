@@ -123,7 +123,7 @@ def expressUpgrade(envelope):
         return "Parcel-Express"
     elif "parcel" in envelope.lower():
         return "Parcel-Express" # parcels are already tracked by default
-    return "Express"
+    return "TMP-Express"
     
 def replaceLabel(customLabel,shipping):
     newEnv = ""
