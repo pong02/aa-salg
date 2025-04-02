@@ -83,6 +83,7 @@ def mergePackaging(packagingDict):
     capacity_map_tracked = {
         'TMP-Small': 1,              # Same as Small
         'TMP-C5': 3,                 # Same as C5
+        'TMP-Large': 6,              # Minimum for C4
         'Parcel-Medium': 12,         # Same as Parcel-Medium
         'Parcel-ExLarge': 36,        # Same as Parcel-ExLarge
     }
@@ -98,6 +99,7 @@ def mergePackaging(packagingDict):
         'parcel-exlarge': 36,
         'tmp-small': 1,
         'tmp-c5': 3,
+        'tmp-large': 6,
         'parcel-medium': 12,
         'parcel-exLarge': 36,
         'express': 3,

@@ -109,7 +109,7 @@ def trackingUpgrade(envelope):
     if envelope == "C5":
         return "TMP-C5"
     elif envelope == "C4":
-        return "Parcel-Medium"
+        return "TMP-Large"
     elif envelope == "Small":
         return "TMP-Small"
     elif envelope == "Parcel":
