@@ -77,14 +77,14 @@ def mergePackaging(packagingDict):
         'Small': 1,                  # Small = 1
         'C5': 3,                     # Minimum for C5
         'C4': 6,                     # Minimum for C4
-        'Parcel-Medium': 12,         # Minimum for Parcel-Medium
+        'Parcel-Medium': 18,         # Minimum for Parcel-Medium
         'Parcel-ExLarge': 36,        # Minimum for Parcel-ExLarge
     }
     capacity_map_tracked = {
         'TMP-Small': 1,              # Same as Small
         'TMP-C5': 3,                 # Same as C5
-        'TMP-Large': 6,              # Minimum for C4
-        'Parcel-Medium': 12,         # Same as Parcel-Medium
+        'TMP-Large': 12,              # Minimum for C4
+        'Parcel-Medium': 18,         # Same as Parcel-Medium
         'Parcel-ExLarge': 36,        # Same as Parcel-ExLarge
     }
     capacity_map_express = {
@@ -95,12 +95,12 @@ def mergePackaging(packagingDict):
         'small': 1,
         'c5': 3,
         'c4': 6,
-        'parcel-medium': 12,
+        'parcel-medium': 18,
         'parcel-exlarge': 36,
         'tmp-small': 1,
         'tmp-c5': 3,
-        'tmp-large': 6,
-        'parcel-medium': 12,
+        'tmp-large': 12,
+        'parcel-medium': 18,
         'parcel-exLarge': 36,
         'express': 3,
         'parcel-express': 36
