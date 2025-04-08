@@ -63,14 +63,17 @@ def multiplyCustomLabel(row):
     """
     if not row['custom_label']:  # Check if custom_label is empty
         return row['custom_label']  # Return as is if no custom_label
-
     updated_labels = []
     custom_labels = row['custom_label'].split(',')  # Split multiple labels
 
     for label in custom_labels:
         multiplier = int(row['Quantity'])  # Default to the row's Quantity
         if '*' in label:  # Check if a multiplier is already present in the label
-            updated_labels.append(label)  # Retain the label as is
+            if multiplier == 1:
+                updated_labels.append(label)  # Retain the label as is
+            else:
+                item, qty =  label.split('*')
+                updated_labels.append(f"{item}*{int(multiplier)*int(qty)}")
         else:
             updated_labels.append(f"{label}*{int(multiplier)}")  # Add multiplier to the label
 
@@ -213,7 +216,7 @@ def process_file(filepath, platform):
         df['custom_label'] = df['custom_label'].str.replace(r'^\[SP\]/', '', regex=True)
         df['custom_label'] = df['custom_label'].astype(str).apply(lambda x: addPlatform(x, "SP"))
         df['custom_label'] = df.apply(lambda row: replaceLabel(row['custom_label'], row['shipping_method']), axis=1)
-        df['zip'] = df['zip'].astype(str).str.extract(r'(\d{4})', expand=False)
+        df['zip'] = df['zip'].astype(str).str.replace(r'\D', '', regex=True).str.zfill(4).str.slice(0, 4)
         df['custom_label'] = df.apply(multiplyCustomLabel, axis=1)
         df['Quantity'] = 1
 
@@ -246,7 +249,7 @@ def process_file(filepath, platform):
         df['custom_label'] = df['custom_label'].str.replace(r'^\[NG\]/', '', regex=True)
         df['custom_label'] = df['custom_label'].astype(str).apply(lambda x: addPlatform(x, "NG"))
         df['custom_label'] = df.apply(lambda row: replaceLabel(row['custom_label'], row['shipping_method']), axis=1)
-        df['zip'] = df['zip'].astype(str).str.extract(r'(\d{4})', expand=False)
+        df['zip'] = df['zip'].astype(str).str.replace(r'\D', '', regex=True).str.zfill(4).str.slice(0, 4)
         df['custom_label'] = df.apply(multiplyCustomLabel, axis=1)
         df['Quantity'] = 1
 
@@ -265,7 +268,7 @@ def process_file(filepath, platform):
         df['custom_label'] = df['custom_label'].str.replace(r'^\[KG\]/', '', regex=True)
         df['custom_label'] = df['custom_label'].astype(str).apply(lambda x: addPlatform(x, "KG"))
         df['custom_label'] = df.apply(lambda row: replaceLabel(row['custom_label'], " "), axis=1) #KG doesnt need shipping edit
-        df['zip'] = df['zip'].astype(str).str.extract(r'(\d{4})', expand=False)
+        df['zip'] = df['zip'].astype(str).str.replace(r'\D', '', regex=True).str.zfill(4).str.slice(0, 4)
         df['custom_label'] = df.apply(multiplyCustomLabel, axis=1)
         df['Quantity'] = 1
 
@@ -281,7 +284,7 @@ def process_file(filepath, platform):
         df['custom_label'] = df['custom_label'].str.replace(r'^\[C\]/', '', regex=True)
         df['custom_label'] = df['custom_label'].astype(str).apply(lambda x: addPlatform(x, "C"))
         df['custom_label'] = df.apply(lambda row: replaceLabel(row['custom_label'], row['shipping_method']), axis=1)
-        df['zip'] = df['zip'].astype(str).str.extract(r'(\d{4})', expand=False)
+        df['zip'] = df['zip'].astype(str).str.replace(r'\D', '', regex=True).str.zfill(4).str.slice(0, 4)
         df['custom_label'] = df.apply(multiplyCustomLabel, axis=1)
         df['Quantity'] = 1
 
