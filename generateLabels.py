@@ -229,6 +229,10 @@ def process_file(filepath, platform):
         df = df[~df['id'].str.contains('record\\(s\\) downloaded', case=False, na=False)]
         df['amt'] = pd.to_numeric(df['amt'].str.replace('AU $', '', regex=False), errors='coerce')
         df['amt'].fillna(0, inplace=True)
+        df.loc[df['Quantity'].astype(str).str.strip() != '', 'amt'] = (
+            df.loc[df['Quantity'].astype(str).str.strip() != '', 'amt'].astype(float) *
+            df.loc[df['Quantity'].astype(str).str.strip() != '', 'Quantity'].astype(float)
+        )
         df['address'] = df.apply(
             lambda row: row['address1'] + ' ' + row['address2'] if 'ebay:' not in row['address1'].lower() else row['address2'],
             axis=1
@@ -260,6 +264,7 @@ def process_file(filepath, platform):
         df['custom_label'] = df['custom_label'].astype(str).apply(lambda x: cleanCustomLabel(x))
         df['address'] = df['address1'] + ' ' + df['address2'].astype(str)
         df['amt'].fillna(0, inplace=True)
+        df['amt'] = df['amt'].astype(float) * df['Quantity'].astype(float)
         df['shipping_method'] = df['amt'].astype(float).apply(lambda x: 'tracking' if x >= TRACKING_AMT else 'untracked')
         df['custom_label'] = df['custom_label'].str.lstrip('NEX-')
         df['custom_label'] = df['custom_label'].str.replace('[KG-','[')

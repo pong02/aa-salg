@@ -144,7 +144,7 @@ def isNormalDelivery(string):
 
 def dumbPackaging(items):
     cableList = read_cable_codes('cables.csv')
-    print(items)
+    # print(items)
     itemList = items.split(', ')
     count = 0
     itemListLength = 0
@@ -169,7 +169,7 @@ def dumbPackaging(items):
         else:
             "Parcel-ExLarge"
     else:
-        print("fall back to smart")
+        # print("fall back to smart")
         return None
     
 def smartPackaging(label):
@@ -217,6 +217,16 @@ def fill_missing_details(df):
                 df.loc[i, 'state'] = df.loc[i - 1, 'state']
     return df
 
+def is_ebay_style_id(id_str):
+    return bool(re.match(r'^\d{2}-\d{5}-\d{5}$', str(id_str)))
+
+def nullify_summary_parent(group):
+    id_str = str(group['id'].iloc[0])
+    if is_ebay_style_id(id_str) and len(group) > 1:
+        max_amt_idx = group['amt'].idxmax()
+        group.loc[max_amt_idx, 'amt'] = 0
+        group.loc[max_amt_idx, 'Quantity'] = 0
+    return group
 
 def merge_orders(input_csv, output_csv):
     """
@@ -243,6 +253,8 @@ def merge_orders(input_csv, output_csv):
         .apply(fill_missing_details)
     )
 
+    df = df.groupby('id', group_keys=False).apply(nullify_summary_parent)
+
     # Merge logic:
     # Group by address, recipient (rname), and source_platform
     merged_df = (
@@ -254,6 +266,7 @@ def merge_orders(input_csv, output_csv):
             'zip': 'first',  # Keep the first zip
             'state': 'first',  # Keep the first state
             'Quantity': 'sum',  # Sum the quantities
+            'amt' : 'sum'
         })
         .reset_index()
     )
@@ -265,7 +278,7 @@ def merge_orders(input_csv, output_csv):
     merged_df['custom_label'] = merged_df['custom_label'].astype(str).apply(lambda x: finishUpLabel(x)) 
 
     # Rearrange columns to match the desired order
-    column_order = ['id', 'rname', 'address', 'city', 'state', 'zip', 'custom_label', 'Quantity']
+    column_order = ['id', 'rname', 'address', 'city', 'state', 'zip', 'custom_label', 'Quantity', 'amt']
     merged_df = merged_df[column_order]
 
     merged_df = merged_df.drop(columns=['Quantity'])
