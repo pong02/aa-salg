@@ -2,6 +2,7 @@ import pandas as pd
 import re
 from collections import defaultdict
 
+TRACKING_AMT = 15
 def has_two_hyphens(s):
     return str(s).count('-') >= 2
 
@@ -88,7 +89,7 @@ def mergePackaging(packagingDict):
         'Parcel-ExLarge': 36,        # Same as Parcel-ExLarge
     }
     capacity_map_express = {
-        'Express': 3,                # Same as C5
+        'TMP-Express': 3,                # Same as C5
         'Parcel-Express': 9         # Minimum for Parcel-Express
     }
     capacity_map_all = {
@@ -102,7 +103,7 @@ def mergePackaging(packagingDict):
         'tmp-large': 12,
         'parcel-medium': 18,
         'parcel-exLarge': 36,
-        'express': 3,
+        'tmp-express': 3,
         'parcel-express': 36
     }
 
@@ -134,6 +135,13 @@ def mergePackaging(packagingDict):
 def extractItems(label):
     cleaned_label = re.sub(r'\[.*?\]/\[.*?\]', '', label).replace(' ','').replace(',',', ')
     return cleaned_label.strip()
+
+def splitLabel(label):
+    match = re.match(r'^\[(.*?)\]/\[(.*?)\]\s*(.+)$', label)
+
+    if match:
+        part1, part2, part3 = match.groups()
+        return (part1,part2,part3)
 
 def isNormalDelivery(string):
     keywords = ['tmp','express','parcel']
@@ -184,6 +192,22 @@ def smartPackaging(label):
         finalPackaging = hardPackaging
     
     return "["+platform+"]/["+finalPackaging+"]"+allItems
+
+def amt_packaging_update(final_label,amt):
+    # since the label is confirmed to be []/[] we can just regex to replace packaging
+    if amt >= TRACKING_AMT:
+        platform , package, items = splitLabel(final_label)
+        if package.strip() == "Small":
+            updatedPackaging = "TMP-Small"
+        elif package.strip() == "C5":
+            updatedPackaging = "TMP-C5"
+        elif package.strip() == "C4":
+            updatedPackaging = "TMP-Large"
+        else: #just dont replace the rest. should be correct ady for these cases
+            updatedPackaging = package
+        return "["+platform+"]/["+updatedPackaging+"] "+items.strip()
+    else:
+        return final_label
 
 def finishUpLabel(label):
     label = label.replace(' ', '').replace(',', ', ').replace('*', ' *')
@@ -273,6 +297,8 @@ def merge_orders(input_csv, output_csv):
 
     # Smart Packaging calculation
     merged_df['custom_label'] = merged_df['custom_label'].astype(str).apply(lambda x: smartPackaging(x)) 
+
+    merged_df['custom_label'] = merged_df.apply(lambda row: amt_packaging_update(row['custom_label'], row['amt']), axis=1)
     
     # Final touches to make label readable
     merged_df['custom_label'] = merged_df['custom_label'].astype(str).apply(lambda x: finishUpLabel(x)) 
