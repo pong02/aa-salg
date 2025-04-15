@@ -246,7 +246,7 @@ def process_file(filepath, platform):
                 else ""
         )
         df['shipping_method'] = df.apply(
-            lambda row: 'tracking' if row['amt'] > 0 and row['shipping_method'] not in ['tracking', 'express']
+            lambda row: 'tracking' if row['amt'] > TRACKING_AMT and row['shipping_method'] not in ['tracking', 'express']
                         else row['shipping_method'], 
             axis=1
         )
