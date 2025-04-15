@@ -322,7 +322,7 @@ def merge_orders(input_csv, output_csv):
     merged_df = merged_df.sort_values(by='sort_key')
 
     # Drop the temporary sorting key column
-    merged_df = merged_df.drop(columns=['sort_key'])
+    merged_df = merged_df.drop(columns=['sort_key','amt'])
 
     # Save the merged DataFrame to the output CSV file
     merged_df.to_csv(output_csv, index=False)
