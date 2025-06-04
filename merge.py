@@ -285,7 +285,7 @@ def merge_orders(input_csv, output_csv):
         df.groupby(['address', 'rname', 'source_platform'], dropna=False)
         .agg({
             'id': lambda x: ', '.join(sorted(x.dropna().unique())),  # Combine unique IDs
-            'custom_label': lambda x: ', '.join(sorted(x.dropna().unique())),  # Combine custom labels
+            'custom_label': lambda x: ', '.join(sorted(x.dropna())),  # Combine custom labels
             'city': 'first',  # Keep the first city
             'zip': 'first',  # Keep the first zip
             'state': 'first',  # Keep the first state
