@@ -2,7 +2,7 @@ import pandas as pd
 import re
 from collections import defaultdict
 
-TRACKING_AMT = 15
+TRACKING_AMT = 50
 def has_two_hyphens(s):
     return str(s).count('-') >= 2
 
