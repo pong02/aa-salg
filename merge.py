@@ -2,11 +2,13 @@ import pandas as pd
 import re
 from collections import defaultdict
 
-TRACKING_AMT = 50
+TRACKING_AMT = 15
 def has_two_hyphens(s):
     return str(s).count('-') >= 2
 
-
+def is_sd(s):
+    return bool(re.findall(r'z\d', s))
+    
 def removePlatform(input_string):
     """
     Removes everything before and including the first '/' in the input string.
@@ -197,11 +199,11 @@ def amt_packaging_update(final_label,amt):
     # since the label is confirmed to be []/[] we can just regex to replace packaging
     if amt >= TRACKING_AMT:
         platform , package, items = splitLabel(final_label)
-        if package.strip() == "Small":
+        if package.strip() == "Small" and is_sd(items):
             updatedPackaging = "TMP-Small"
-        elif package.strip() == "C5":
+        elif package.strip() == "C5" and is_sd(items):
             updatedPackaging = "TMP-C5"
-        elif package.strip() == "C4":
+        elif package.strip() == "C4" and is_sd(items):
             updatedPackaging = "TMP-Large"
         else: #just dont replace the rest. should be correct ady for these cases
             updatedPackaging = package
