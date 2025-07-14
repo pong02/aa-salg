@@ -199,11 +199,11 @@ def amt_packaging_update(final_label,amt):
     # since the label is confirmed to be []/[] we can just regex to replace packaging
     if amt >= TRACKING_AMT:
         platform , package, items = splitLabel(final_label)
-        if package.strip() == "Small" and is_sd(items):
+        if package.strip() == "Small" and (is_sd(items) or platform == 'KG'):
             updatedPackaging = "TMP-Small"
-        elif package.strip() == "C5" and is_sd(items):
+        elif package.strip() == "C5" and (is_sd(items) or platform == 'KG'):
             updatedPackaging = "TMP-C5"
-        elif package.strip() == "C4" and is_sd(items):
+        elif package.strip() == "C4" and (is_sd(items) or platform == 'KG'):
             updatedPackaging = "TMP-Large"
         else: #just dont replace the rest. should be correct ady for these cases
             updatedPackaging = package
@@ -324,7 +324,7 @@ def merge_orders(input_csv, output_csv):
     merged_df = merged_df.sort_values(by='sort_key')
 
     # Drop the temporary sorting key column
-    merged_df = merged_df.drop(columns=['sort_key','amt'])
+    merged_df = merged_df.drop(columns=['sort_key'])
 
     # Save the merged DataFrame to the output CSV file
     merged_df.to_csv(output_csv, index=False)
