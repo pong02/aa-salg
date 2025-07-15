@@ -1,8 +1,6 @@
 import os
 import pandas as pd
 import re
-
-TRACKING_AMT = 50
 # Define the standard column names for each platform
 COLUMN_MAPPING = {
     'shopify': {
