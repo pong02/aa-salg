@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import re
 
-TRACKING_AMT = 15
+TRACKING_AMT = 50
 # Define the standard column names for each platform
 COLUMN_MAPPING = {
     'shopify': {
@@ -207,12 +207,8 @@ def process_file(filepath, platform):
 
         df['amt'] = df['amt'].fillna(0)  # Replace NaN with 0 to avoid conversion errors
         df['amt'] = df['amt'].replace('', 0).astype(float)  # Convert empty strings to 0 before converting to float
-
         
-        df.loc[df['shipping_method'] == "untracked", 'shipping_method'] = df['amt'].astype(float).apply(
-            lambda x: "tracking" if x >= TRACKING_AMT else "untracked"
-        )
-        
+        df['shipping_method'] = 'untracked'        
         df['custom_label'] = df['custom_label'].str.replace(r'^\[SP\]/', '', regex=True)
         df['custom_label'] = df['custom_label'].astype(str).apply(lambda x: addPlatform(x, "SP"))
         df['custom_label'] = df.apply(lambda row: replaceLabel(row['custom_label'], row['shipping_method']), axis=1)
@@ -246,7 +242,7 @@ def process_file(filepath, platform):
                 else ""
         )
         df['shipping_method'] = df.apply(
-            lambda row: 'tracking' if row['amt'] > TRACKING_AMT and row['shipping_method'] not in ['tracking', 'express']
+            lambda row: 'tracking' if row['shipping_method'] not in ['tracking', 'express']
                         else row['shipping_method'], 
             axis=1
         )
@@ -265,7 +261,7 @@ def process_file(filepath, platform):
         df['address'] = df['address1'] + ' ' + df['address2'].astype(str)
         df['amt'].fillna(0, inplace=True)
         df['amt'] = df['amt'].astype(float) * df['Quantity'].astype(float)
-        df['shipping_method'] = df['amt'].astype(float).apply(lambda x: 'tracking' if x >= TRACKING_AMT else 'untracked')
+        df['shipping_method'] = 'untracked'
         df['custom_label'] = df['custom_label'].str.lstrip('NEX-')
         df['custom_label'] = df['custom_label'].str.replace('[KG-','[')
         df['custom_label'] = df['custom_label'].str.replace('[USAMS-','[')
@@ -285,7 +281,7 @@ def process_file(filepath, platform):
         df['address'] = df['company'] + ' ' + df['address1'].fillna('') + ' ' + df['address2']
         df['rname'] = df['fname'] + ' ' + df['lname']
         df['amt'].fillna(0, inplace=True)
-        df['shipping_method'] = df['amt'].astype(float).apply(lambda x: 'tracking' if x >= TRACKING_AMT else 'untracked')
+        df['shipping_method'] = 'untracked'
         df['custom_label'] = df['custom_label'].str.replace(r'^\[C\]/', '', regex=True)
         df['custom_label'] = df['custom_label'].astype(str).apply(lambda x: addPlatform(x, "C"))
         df['custom_label'] = df.apply(lambda row: replaceLabel(row['custom_label'], row['shipping_method']), axis=1)
