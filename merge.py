@@ -318,10 +318,10 @@ def merge_orders(input_csv, output_csv):
     merged_df = merged_df.sort_values(by='sort_key')
 
     # Drop the temporary sorting key column
-    merged_df = merged_df.drop(columns=['sort'])
+    merged_df = merged_df.drop(columns=['sort_key'])
 
     # Rearrange columns to match the desired order
-    column_order = ['id', 'rname', 'address', 'city', 'state', 'zip', 'custom_label', 'Quantity', 'sort_key', 'amt']
+    column_order = ['id', 'rname', 'address', 'city', 'state', 'zip', 'custom_label', 'Quantity', 'sort', 'amt']
     merged_df = merged_df[column_order]
 
     merged_df = merged_df.drop(columns=['Quantity'])
