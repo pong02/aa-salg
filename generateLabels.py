@@ -239,8 +239,10 @@ def process_file(filepath, platform):
                 else "express" if "express" in x
                 else ""
         )
+
+        #fallback to untracked as long as not tracking or express
         df['shipping_method'] = df.apply(
-            lambda row: 'tracking' if row['shipping_method'] not in ['tracking', 'express']
+            lambda row: 'untracked' if row['shipping_method'] not in ['tracking', 'express']
                         else row['shipping_method'], 
             axis=1
         )
