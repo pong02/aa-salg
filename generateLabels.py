@@ -205,8 +205,7 @@ def process_file(filepath, platform):
 
         df['amt'] = df['amt'].fillna(0)  # Replace NaN with 0 to avoid conversion errors
         df['amt'] = df['amt'].replace('', 0).astype(float)  # Convert empty strings to 0 before converting to float
-        
-        df['shipping_method'] = 'untracked'        
+               
         df['custom_label'] = df['custom_label'].str.replace(r'^\[SP\]/', '', regex=True)
         df['custom_label'] = df['custom_label'].astype(str).apply(lambda x: addPlatform(x, "SP"))
         df['custom_label'] = df.apply(lambda row: replaceLabel(row['custom_label'], row['shipping_method']), axis=1)
