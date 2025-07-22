@@ -305,12 +305,6 @@ def merge_orders(input_csv, output_csv):
     # Final touches to make label readable
     merged_df['custom_label'] = merged_df['custom_label'].astype(str).apply(lambda x: finishUpLabel(x)) 
 
-    # Rearrange columns to match the desired order
-    column_order = ['id', 'rname', 'address', 'city', 'state', 'zip', 'custom_label', 'Quantity', 'amt']
-    merged_df = merged_df[column_order]
-
-    merged_df = merged_df.drop(columns=['Quantity'])
-
     # Prepare for Sorting with custom order
     merged_df['sort'] = merged_df['custom_label'].str.split(']').str[-1].str.replace(" ", "", regex=True)
     merged_df['sort'] = merged_df['sort'].fillna("???").replace("", "???")
@@ -324,7 +318,13 @@ def merge_orders(input_csv, output_csv):
     merged_df = merged_df.sort_values(by='sort_key')
 
     # Drop the temporary sorting key column
-    merged_df = merged_df.drop(columns=['sort_key'])
+    merged_df = merged_df.drop(columns=['sort'])
+
+    # Rearrange columns to match the desired order
+    column_order = ['id', 'rname', 'address', 'city', 'state', 'zip', 'custom_label', 'Quantity', 'sort_key', 'amt']
+    merged_df = merged_df[column_order]
+
+    merged_df = merged_df.drop(columns=['Quantity'])
 
     # Save the merged DataFrame to the output CSV file
     merged_df.to_csv(output_csv, index=False)
