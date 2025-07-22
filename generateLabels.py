@@ -199,7 +199,7 @@ def process_file(filepath, platform):
             else row['rname'], 
             axis=1
         )
-        df['shipping_method'] = df['tags'].str.contains(r'kogan|mydeal', case=False, na=False).apply(
+        df['shipping_method'] = df['tags'].str.contains(r'kogan|mydeal|everyday market', case=False, na=False).apply(
             lambda x: "tracking" if x else "untracked"
         )
 
