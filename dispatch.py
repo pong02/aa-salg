@@ -118,16 +118,19 @@ def generate_dispatch_file_with_tracking(merged_csv_path, kogan_csv_path, tracki
     final_df['WAREHOUSE'] = 'AUNEX'
     final_df['CARRIER'] = enriched_df['Tracking Number'].apply(carrier_from_tracking)
     final_df['amt'] = enriched_df['amt']
+    
+    # parcels
+    final_df.loc[(final_df['CONNOTE'] == 'ELMS') & (final_df['amt'] >= 30), 'CONNOTE'] = ''
 
     # Save final output to 'koganDispatch.csv'
     dispatch_csv_path = 'koganDispatch.csv'
     final_df.to_csv(dispatch_csv_path, index=False)
     print(f"Dispatch file saved to: {dispatch_csv_path}")
 
-# Example usage
 merged_csv = 'merged_labels.csv'
 kogan_csv = 'kogan_orders.csv'
 tracking_csv = 'tracking.csv'
 dispatch_csv = 'koganDispatch.csv'
+
 
 generate_dispatch_file_with_tracking(merged_csv, kogan_csv, tracking_csv, dispatch_csv)
