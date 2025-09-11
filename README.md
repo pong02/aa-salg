@@ -94,7 +94,7 @@ python3 -m ensurepip --upgrade
 ```
 to install the python package manager, which allows you to install dependencies easily, then once done, do:
 ```bash
-pip install pandas
+pip install -r requirements.txt
 ```
 To use the startup script without typing commands, please make sure to paste this in powershell as ADMIN
 ```bash
