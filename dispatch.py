@@ -3,6 +3,13 @@ import re
 from datetime import datetime
 import os
 
+def trim_to_tmp(val):
+        if isinstance(val, str):
+            pos = val.find('TMP')
+            if pos != -1:
+                return val[pos:]  # keep from 'TMP' to end
+        return val
+
 def is_valid_id(id_str):
     """
     Checks if the ID is exactly 8 alphanumeric characters.
@@ -124,6 +131,8 @@ def generate_dispatch_file_with_tracking(merged_csv_path, kogan_csv_path, tracki
 
     # Save final output to 'koganDispatch.csv'
     dispatch_csv_path = 'koganDispatch.csv'
+    final_df['CONNOTE'] = final_df['CONNOTE'].apply(trim_to_tmp)
+    
     final_df.to_csv(dispatch_csv_path, index=False)
     print(f"Dispatch file saved to: {dispatch_csv_path}")
 
