@@ -9,11 +9,11 @@
 !*.ps1
 !requirements.txt
 !images
-!PhoneModelMSDB.csv
-!cables.csv
 
 # Ignore CSV files
 *.csv
+!PhoneModelMSDB.csv
+!cables.csv
 
 # Ignore macOS metadata files
 .DS_Store
