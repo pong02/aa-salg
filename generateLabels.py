@@ -262,9 +262,9 @@ def process_file(filepath, platform):
         df['amt'] = df['amt'].astype(float) * df['Quantity'].astype(float)
         df['shipping_method'] = 'untracked'
         df['custom_label'] = df['custom_label'].str.lstrip('NEX-')
-        df['custom_label'] = df['custom_label'].str.replace('[KG-','[')
-        df['custom_label'] = df['custom_label'].str.replace('[USAMS-','[')
-        df['custom_label'] = df['custom_label'].str.replace('[UB-','[')
+        df['custom_label'] = df['custom_label'].str.replace('[KG-','[',regex=False)
+        df['custom_label'] = df['custom_label'].str.replace('[USAMS-','[',regex=False)
+        df['custom_label'] = df['custom_label'].str.replace('[UB-','[',regex=False)
         df['custom_label'] = df['custom_label'].str.replace(r'^\[KG\]/', '', regex=True)
         df['custom_label'] = df['custom_label'].astype(str).apply(lambda x: addPlatform(x, "KG"))
         df['custom_label'] = df.apply(lambda row: replaceLabel(row['custom_label'], " "), axis=1) #KG doesnt need shipping edit

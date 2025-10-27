@@ -9,6 +9,8 @@
 !*.ps1
 !requirements.txt
 !images
+!PhoneModelMSDB.csv
+!cables.csv
 
 # Ignore CSV files
 *.csv

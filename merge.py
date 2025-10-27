@@ -3,6 +3,11 @@ import re
 from collections import defaultdict
 
 TRACKING_AMT = 30
+
+## Phone model lookup
+phone_model_df = pd.read_csv("PhoneModelMSDB.csv")
+phone_model_map = dict(zip(phone_model_df['Code'], phone_model_df['Model Info']))
+
 def has_two_hyphens(s):
     return str(s).count('-') >= 2
 
@@ -219,6 +224,23 @@ def finishUpLabel(label):
 
     return label.strip()
 
+def annotate_phone_model(label):
+    """Annotate phone model codes within a label string using PhoneModelMSDB mapping."""
+    if not isinstance(label, str):
+        return label  # in case of NaN or non-string input
+
+    updated_label = extractItems(label)
+    for code, model_info in phone_model_map.items():
+        # Match the code as a whole word or segment
+        pattern = re.escape(code)
+        # Append model info if code present but not already annotated
+        if re.search(pattern, updated_label) and model_info not in updated_label:
+            updated_label = re.sub(
+                pattern + r'(?!\s*\()',  # only if not already followed by a parenthesis
+                f"{code} ({model_info})",updated_label
+            )
+    return updated_label
+
 def read_cable_codes(file_path):
     df = pd.read_csv(file_path)
     data_array = df.iloc[:, 0].tolist()
@@ -304,6 +326,9 @@ def merge_orders(input_csv, output_csv):
     
     # Final touches to make label readable
     merged_df['custom_label'] = merged_df['custom_label'].astype(str).apply(lambda x: finishUpLabel(x)) 
+
+    # Final touches to annotate label with phone models
+    merged_df['custom_label'] = merged_df['custom_label'].astype(str).apply(lambda x: annotate_phone_model(x)) 
 
     # Prepare for Sorting with custom order
     merged_df['sort'] = merged_df['custom_label'].str.split(']').str[-1].str.replace(" ", "", regex=True)
