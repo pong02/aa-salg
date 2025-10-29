@@ -143,6 +143,10 @@ def extractItems(label):
     cleaned_label = re.sub(r'\[.*?\]/\[.*?\]', '', label).replace(' ','').replace(',',', ')
     return cleaned_label.strip()
 
+def extract_bracket(label):
+    matches = re.findall(r'\[.*?\]/\[.*?\]', label) +" "
+    return matches
+
 def splitLabel(label):
     match = re.match(r'^\[(.*?)\]/\[(.*?)\]\s*(.+)$', label)
 
@@ -228,7 +232,8 @@ def annotate_phone_model(label):
     """Annotate phone model codes within a label string using PhoneModelMSDB mapping."""
     if not isinstance(label, str):
         return label  # in case of NaN or non-string input
-
+    ## extract brackets here
+    brackets = extract_bracket(label)
     updated_label = extractItems(label)
     for code, model_info in phone_model_map.items():
         # Match the code as a whole word or segment
@@ -239,7 +244,7 @@ def annotate_phone_model(label):
                 pattern + r'(?!\s*\()',  # only if not already followed by a parenthesis
                 f"{code} ({model_info})",updated_label
             )
-    return updated_label
+    return brackets + updated_label
 
 def read_cable_codes(file_path):
     df = pd.read_csv(file_path)
