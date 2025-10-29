@@ -144,8 +144,8 @@ def extractItems(label):
     return cleaned_label.strip()
 
 def extract_bracket(label):
-    matches = re.findall(r'\[.*?\]/\[.*?\]', label) +" "
-    return matches
+    match = re.search(r'\[.*?\]/\[.*?\]', label)
+    return match.group(0) if match else ""
 
 def splitLabel(label):
     match = re.match(r'^\[(.*?)\]/\[(.*?)\]\s*(.+)$', label)
@@ -244,7 +244,11 @@ def annotate_phone_model(label):
                 pattern + r'(?!\s*\()',  # only if not already followed by a parenthesis
                 f"{code} ({model_info})",updated_label
             )
-    return brackets + updated_label
+
+    if brackets:
+        return f"{brackets} {updated_label}"
+    else:
+        return updated_label
 
 def read_cable_codes(file_path):
     df = pd.read_csv(file_path)
