@@ -102,4 +102,4 @@ Set-ExecutionPolicy RemoteSigned
 ```
 
 To use the Sendle/Basic Parcel automation, please get the secrets.json and place it in the project root 
-![Packages Diagram](images/package-hierarchy.png)
+![root Diagram](images/secrets.png)
