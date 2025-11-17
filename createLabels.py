@@ -8,6 +8,7 @@ import json
 import os
 import io
 import shutil
+import csv
 from datetime import datetime
 from PyPDF2 import PdfReader, PdfWriter
 
@@ -56,6 +57,15 @@ SENDLE_ID = secrets["SENDLE_ID"]
 API_KEY = secrets["API_KEY"]
 SENDLE_API_QUOTE_URL = "https://api.sendle.com/api/quote"
 SENDLE_API_ORDER_URL = "https://api.sendle.com/api/orders"
+
+## Tracking pasta
+sp = [
+    ['Basic', ' ', ' ', ' ', ' ']
+]
+
+sd = [
+    ['Sendle', ' ', ' ', ' ', ' '] 
+]
 
 def get_sendle_quote(pickup_suburb, pickup_postcode, delivery_suburb, delivery_postcode, weight, length, width, height):
     payload = {
@@ -263,7 +273,8 @@ def generate_labels(csv_filename, output_filename, price_threshold=7.0):
         "receiver_suburb",
         "receiver_state_name",
         "receiver_postcode",
-        "customer_reference"
+        "customer_reference",
+        "description"
     ]
     df = df[required_cols]
 
@@ -282,6 +293,9 @@ def generate_labels(csv_filename, output_filename, price_threshold=7.0):
         )
         temp_df = pd.DataFrame()
         label_url = ""
+        tracking_url = ""
+        sendle_ref = ""
+
         # Defensive parsing of the response
         try:
             if isinstance(quote_response, list) and quote_response:
@@ -292,6 +306,8 @@ def generate_labels(csv_filename, output_filename, price_threshold=7.0):
             quote_price = 999
 
         print(f"Quote for {row['receiver_name']}: ${quote_price:.2f}")
+        order_id = row['description']
+        receiver = row['receiver_name']
 
         if quote_price < price_threshold:
             order_response = create_sendle_order(row)
@@ -301,8 +317,10 @@ def generate_labels(csv_filename, output_filename, price_threshold=7.0):
 
         if label_url:
             download_sendle_label(label_url, sendle_ref)
+            sd.append([order_id, ' ', ' ', receiver, sendle_ref,' ',' ',tracking_url])
         else:
             draw_label(c, row, SENDER_INFO)
+            sp.append([order_id, ' ', ' ', receiver, ' '])
             c.showPage()
 
     ## generate sp label
@@ -315,6 +333,12 @@ def generate_labels(csv_filename, output_filename, price_threshold=7.0):
     print(f"Sendle labels PDF created: {sendle_output}")
     clear_sendle_dir()
 
+    ## generate tracking pasta
+    with open('tracking_update.csv', 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerows(sp)
+        writer.writerow([])
+        writer.writerows(sd)
 
 # Run the generator
 generate_labels(CSV_FILENAME, OUTPUT_FILENAME)
