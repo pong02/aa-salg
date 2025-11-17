@@ -100,3 +100,6 @@ To use the startup script without typing commands, please make sure to paste thi
 ```bash
 Set-ExecutionPolicy RemoteSigned
 ```
+
+To use the Sendle/Basic Parcel automation, please get the secrets.json and place it in the project root 
+![root Diagram](images/secrets.png)
