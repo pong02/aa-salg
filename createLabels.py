@@ -11,61 +11,90 @@ import shutil
 import csv
 from datetime import datetime
 from PyPDF2 import PdfReader, PdfWriter
+import argparse
 
+# ======================================================================
+# Warehouse Configuration
+# ======================================================================
+
+WAREHOUSE_CONFIG = {
+    "1": {
+        "sender_name": "GrabNest",
+        "sender_email": "grabnest81@gmail.com",
+        "address_line1": "6 Envision Cl",
+        "suburb": "Pakenham",
+        "state_name": "VIC",
+        "postcode": "3810",
+        "country": "AU",
+        "label_sender_block": [
+            "GrabNest",
+            "6 Envision Cl",
+            "Pakenham",
+            "VIC 3810"
+        ],
+        "quote_pickup_suburb": "Pakenham",
+        "quote_pickup_postcode": "3810"
+    },
+    "2": {
+        "sender_name": "NexGen",
+        "sender_email": "nexgenau23@gmail.com",
+        "address_line1": "500 Elizabeth Street",
+        "suburb": "Melbourne",
+        "state_name": "VIC",
+        "postcode": "3000",
+        "country": "AU",
+        "label_sender_block": [
+            "NexGen",
+            "Vision Apartments",
+            "500 Elizabeth Street",
+            "MELBOURNE VIC 3000"
+        ],
+        "quote_pickup_suburb": "Melbourne",
+        "quote_pickup_postcode": "3000"
+    }
+}
+
+# ======================================================================
 # Constants
+# ======================================================================
+
 CSV_FILENAME = "sendle_batch_csv_template.csv"
 OUTPUT_FILENAME = f"{datetime.now().strftime('%Y%m%d')}_basic.pdf"
 LINE_SPACING = 14
-SAFE_WIDTH = 250  # conservative printable width in points
+SAFE_WIDTH = 250
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SENDLE_DIR = os.path.join(BASE_DIR, "sendles")
 SECRETS_PATH = os.path.join(os.path.dirname(__file__), "secrets.json")
 
+
 def ensure_sendle_dir():
-    """Create sendles/ directory if not exists."""
     if not os.path.exists(SENDLE_DIR):
         os.makedirs(SENDLE_DIR)
 
 
-# SENDER_INFO = [
-#     "From: TheAroundAustralia",
-#     "Vision Apartments",
-#     "500 Elizabeth Street",
-#     "MELBOURNE",
-#     "VIC 3000"
-# ]
+# empty default until CLI loads
+SENDER_INFO = [" ", " ", " ", " ", " "]
 
-# SENDER_INFO = [
-#     "From: GrabNest",
-#     "6 Envision Cl ",
-#     "Pakenham",
-#     "VIC 3810"
-# ]
+# Tracking
+sp = [['Basic', ' ', ' ', ' ', ' ']]
+sd = [['Sendle', ' ', ' ', ' ', ' ']]
 
-SENDER_INFO = [
-    " ",
-    " ",
-    " ",
-    " ",
-    " "
-]
+# ======================================================================
+# Load API Keys
+# ======================================================================
 
-## Sendle set up
 with open(SECRETS_PATH, "r") as f:
     secrets = json.load(f)
+
 SENDLE_ID = secrets["SENDLE_ID"]
 API_KEY = secrets["API_KEY"]
+
 SENDLE_API_QUOTE_URL = "https://api.sendle.com/api/quote"
 SENDLE_API_ORDER_URL = "https://api.sendle.com/api/orders"
 
-## Tracking pasta
-sp = [
-    ['Basic', ' ', ' ', ' ', ' ']
-]
-
-sd = [
-    ['Sendle', ' ', ' ', ' ', ' '] 
-]
+# ======================================================================
+# API Functions
+# ======================================================================
 
 def get_sendle_quote(pickup_suburb, pickup_postcode, delivery_suburb, delivery_postcode, weight, length, width, height):
     payload = {
@@ -74,23 +103,20 @@ def get_sendle_quote(pickup_suburb, pickup_postcode, delivery_suburb, delivery_p
         "delivery_suburb": delivery_suburb,
         "delivery_postcode": delivery_postcode,
         "weight_value": float(weight),
-        "weight_units": "kg",  # or "g"
+        "weight_units": "kg",
         "length": length,
         "width": width,
         "height": height,
         "dimension_units": "cm"
     }
     auth = base64.b64encode(f"{SENDLE_ID}:{API_KEY}".encode()).decode()
-    headers = {
-        "Authorization": f"Basic {auth}",
-        "Content-Type": "application/json"
-    }
+    headers = {"Authorization": f"Basic {auth}", "Content-Type": "application/json"}
 
     response = requests.get(SENDLE_API_QUOTE_URL, params=payload, headers=headers)
-    ## print(response.status_code, response.text)
     return response.json()
 
-def create_sendle_order(row):
+
+def create_sendle_order(row, config):
     order_payload = {
         "pickup_option": "drop_off",
         "product_code": "STANDARD-DROPOFF",
@@ -100,21 +126,21 @@ def create_sendle_order(row):
         "cubic_metre_volume": 0.001,
         "sender": {
             "contact": {
-                "name": "GrabNest",
-                "email": "grabnest81@gmail.com"
+                "name": config["sender_name"],
+                "email": config["sender_email"]
             },
             "address": {
-                "address_line1": "6 Envision Cl",
-                "suburb": "Pakenham",
-                "state_name": "VIC",
-                "postcode": "3810",
-                "country": "AU"
+                "address_line1": config["address_line1"],
+                "suburb": config["suburb"],
+                "state_name": config["state_name"],
+                "postcode": config["postcode"],
+                "country": config["country"]
             }
         },
         "receiver": {
             "contact": {
                 "name": row["receiver_name"],
-                "email": "grabnest81@gmail.com"
+                "email": config["sender_email"]
             },
             "address": {
                 "address_line1": row["receiver_address_line1"],
@@ -130,32 +156,29 @@ def create_sendle_order(row):
     auth = base64.b64encode(f"{SENDLE_ID}:{API_KEY}".encode()).decode()
     headers = {"Authorization": f"Basic {auth}", "Content-Type": "application/json"}
     response = requests.post(SENDLE_API_ORDER_URL, json=order_payload, headers=headers)
-    print("\t[*]  Order request:", order_payload)
-    print("\t[*]  Order response:", response.status_code, response.text)
+
+    print("\t[*] Order request:", order_payload)
+    print("\t[*] Order response:", response.status_code, response.text)
+
     return response.json()
 
+
 def extract_label_url(order_response, preferred_size="a4"):
-    """Return the Sendle label URL from an order response."""
     labels = order_response.get("labels", [])
     if isinstance(labels, list) and labels:
-        # Try to find preferred size first (a4 or cropped)
         for lbl in labels:
             if lbl.get("format") == "pdf" and lbl.get("size") == preferred_size:
                 return lbl.get("url")
-        # fallback: first available label
         return labels[0].get("url")
     return None
 
+
 def download_sendle_label(label_url, order_ref):
-    """Download a protected Sendle label using the same Basic Auth method."""
     ensure_sendle_dir()
     filename = os.path.join(SENDLE_DIR, f"{order_ref}.pdf")
 
     auth = base64.b64encode(f"{SENDLE_ID}:{API_KEY}".encode()).decode()
-    headers = {
-        "Authorization": f"Basic {auth}",
-        "Accept": "application/pdf"
-    }
+    headers = {"Authorization": f"Basic {auth}", "Accept": "application/pdf"}
 
     try:
         response = requests.get(label_url, headers=headers, stream=True, timeout=30)
@@ -177,8 +200,8 @@ def download_sendle_label(label_url, order_ref):
         print(f"Network error downloading Sendle label for {order_ref}: {e}")
         return None
 
+
 def combine_sendle_pdfs(output_filename):
-    """Combine all Sendle label PDFs into one standalone file."""
     if not os.path.exists(SENDLE_DIR):
         print("No Sendle labels found.")
         return
@@ -203,25 +226,25 @@ def combine_sendle_pdfs(output_filename):
 
     print(f"Combined {len(sendle_pdfs)} Sendle labels into {output_filename}")
 
+
 def clear_sendle_dir():
-    """Delete the sendles/ directory and its contents."""
     if os.path.exists(SENDLE_DIR):
         shutil.rmtree(SENDLE_DIR)
         print("Cleared sendles/ directory.")
 
+
+# ======================================================================
+# Helper Functions
+# ======================================================================
+
 def wrap_text(text, font_name, font_size, max_width):
-    """
-    Fallback wrapper: uses simpleSplit but also splits unbroken lines if needed.
-    """
     lines = simpleSplit(str(text), font_name, font_size, max_width)
-    
-    # Handle unbroken long strings (e.g., long tracking numbers with no spaces)
     if len(lines) == 1 and len(lines[0]) > 40:
         raw = lines[0]
-        approx_chars = int(max_width / (font_size * 0.6))  # rough width-per-char estimate
+        approx_chars = int(max_width / (font_size * 0.6))
         lines = [raw[i:i+approx_chars] for i in range(0, len(raw), approx_chars)]
-    
     return lines
+
 
 def draw_wrapped_reference(c, text, x, y, font="Helvetica", size=12, max_width=SAFE_WIDTH):
     lines = wrap_text(text, font, size, max_width)
@@ -231,12 +254,12 @@ def draw_wrapped_reference(c, text, x, y, font="Helvetica", size=12, max_width=S
         y -= LINE_SPACING
     return y
 
+
 def draw_label(c, data, sender_info):
     width, height = A4
     margin_left = 90
     current_y = height - 100
 
-    # Recipient block
     c.setFont("Helvetica", 12)
     c.drawString(margin_left, current_y, f"To: {data['receiver_name']}")
     current_y -= LINE_SPACING
@@ -246,25 +269,24 @@ def draw_label(c, data, sender_info):
     current_y -= LINE_SPACING
     c.drawString(margin_left, current_y, f"{data['receiver_state_name']} {data['receiver_postcode']}")
 
-    # Spacer
     current_y -= LINE_SPACING * 2
 
-    # Sender block
     for line in sender_info:
         c.drawString(margin_left, current_y, line)
         current_y -= LINE_SPACING
 
-    # Spacer
     current_y -= LINE_SPACING * 2
 
-    # Ref block
     c.drawString(margin_left, current_y, "Ref:")
     current_y -= LINE_SPACING
-    current_y = draw_wrapped_reference(
-        c, data["customer_reference"], margin_left, current_y
-    )
+    return draw_wrapped_reference(c, data["customer_reference"], margin_left, current_y)
 
-def generate_labels(csv_filename, output_filename, price_threshold=7.0):
+
+# ======================================================================
+# Main Processing
+# ======================================================================
+
+def generate_labels(csv_filename, output_filename, config, price_threshold=6.0):
     df = pd.read_csv(csv_filename)
 
     required_cols = [
@@ -276,69 +298,90 @@ def generate_labels(csv_filename, output_filename, price_threshold=7.0):
         "customer_reference",
         "description"
     ]
-    df = df[required_cols]
 
+    df = df[required_cols]
     c = canvas.Canvas(output_filename, pagesize=A4)
 
     for _, row in df.iterrows():
         quote_response = get_sendle_quote(
-            pickup_suburb="Melbourne",
-            pickup_postcode="3000",
+            pickup_suburb=config["quote_pickup_suburb"],
+            pickup_postcode=config["quote_pickup_postcode"],
             delivery_suburb=row["receiver_suburb"],
             delivery_postcode=row["receiver_postcode"],
-            weight=float(0.2),
+            weight=0.2,
             length=10,
             width=10,
             height=10
         )
-        temp_df = pd.DataFrame()
-        label_url = ""
-        tracking_url = ""
-        sendle_ref = ""
 
-        # Defensive parsing of the response
         try:
             if isinstance(quote_response, list) and quote_response:
                 quote_price = float(quote_response[0].get("quote", {}).get("gross", {}).get("amount", 999))
             else:
                 quote_price = float(quote_response.get("quote", {}).get("gross", {}).get("amount", 999))
-        except (ValueError, TypeError, AttributeError):
+        except Exception:
             quote_price = 999
 
         print(f"Quote for {row['receiver_name']}: ${quote_price:.2f}")
-        order_id = row['description']
-        receiver = row['receiver_name']
+
+        order_id = row["description"]
+        receiver = row["receiver_name"]
+
+        label_url = ""
+        tracking_url = ""
+        sendle_ref = ""
 
         if quote_price < price_threshold:
-            order_response = create_sendle_order(row)
+            order_response = create_sendle_order(row, config)
             tracking_url = order_response.get("tracking_url")
             label_url = extract_label_url(order_response)
             sendle_ref = order_response.get("sendle_reference", row["customer_reference"])
 
         if label_url:
             download_sendle_label(label_url, sendle_ref)
-            sd.append([order_id, ' ', ' ', receiver, sendle_ref,' ',' ',tracking_url])
+            sd.append([order_id, ' ', ' ', receiver, sendle_ref, ' ', ' ', tracking_url])
         else:
             draw_label(c, row, SENDER_INFO)
             sp.append([order_id, ' ', ' ', receiver, ' '])
             c.showPage()
 
-    ## generate sp label
     c.save()
     print(f"Basic Parcel PDF created: {output_filename}")
 
-    ## generate sendle label (merging)
     sendle_output = f"{datetime.now().strftime('%Y%m%d')}_sendle.pdf"
     combine_sendle_pdfs(sendle_output)
     print(f"Sendle labels PDF created: {sendle_output}")
     clear_sendle_dir()
 
-    ## generate tracking pasta
     with open('tracking_update.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerows(sp)
         writer.writerow([])
         writer.writerows(sd)
 
-# Run the generator
-generate_labels(CSV_FILENAME, OUTPUT_FILENAME)
+
+# ======================================================================
+# Entry Point
+# ======================================================================
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Generate labels and Sendle orders.")
+    parser.add_argument(
+        "--warehouse",
+        required=True,
+        choices=["1", "2"],
+        help="Select which warehouse's sender information to use."
+    )
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=7.0,
+        help="Maximum Sendle quote price before falling back to basic label (default: 7.0)"
+    )
+
+    args = parser.parse_args()
+    config = WAREHOUSE_CONFIG[args.warehouse]
+
+    SENDER_INFO = config["label_sender_block"]
+
+    generate_labels(CSV_FILENAME, OUTPUT_FILENAME, config, price_threshold=args.threshold)
