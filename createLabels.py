@@ -38,19 +38,18 @@ WAREHOUSE_CONFIG = {
     "2": {
         "sender_name": "NexGen",
         "sender_email": "nexgenau23@gmail.com",
-        "address_line1": "500 Elizabeth Street",
-        "suburb": "Melbourne",
+        "address_line1": "6/20 Grange Road",
+        "suburb": "Carnegie",
         "state_name": "VIC",
-        "postcode": "3000",
+        "postcode": "3163",
         "country": "AU",
         "label_sender_block": [
-            "NexGen",
-            "Vision Apartments",
-            "500 Elizabeth Street",
-            "MELBOURNE VIC 3000"
+            "NexGenAU",
+            "6/20 Grange Road",
+            "CARNEGIE VIC 3163"
         ],
-        "quote_pickup_suburb": "Melbourne",
-        "quote_pickup_postcode": "3000"
+        "quote_pickup_suburb": "CARNEGIE",
+        "quote_pickup_postcode": "3163"
     }
 }
 
@@ -370,13 +369,13 @@ if __name__ == "__main__":
         "--warehouse",
         required=True,
         choices=["1", "2"],
-        help="Select which warehouse's sender information to use."
+        help="Select which warehouse's sender information to use. 1 = Pakenham 2 = Carnegie "
     )
     parser.add_argument(
         "--threshold",
         type=float,
         default=7.0,
-        help="Maximum Sendle quote price before falling back to basic label (default: 7.0)"
+        help="Maximum Sendle quote price before falling back to basic label (default: 6.0)"
     )
 
     args = parser.parse_args()
