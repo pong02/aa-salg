@@ -27,6 +27,7 @@ WAREHOUSE_CONFIG = {
         "postcode": "3810",
         "country": "AU",
         "label_sender_block": [
+            "IF UNDELIVERED RETURN TO:",
             "GrabNest",
             "6 Envision Cl",
             "Pakenham",
@@ -44,9 +45,15 @@ WAREHOUSE_CONFIG = {
         "postcode": "3163",
         "country": "AU",
         "label_sender_block": [
-            "NexGenAU",
-            "6/20 Grange Road",
-            "CARNEGIE VIC 3163"
+            # "IF UNDELIVERED RETURN TO:",
+            # "NexGenAU",
+            # "6/20 Grange Road",
+            # "CARNEGIE",
+            # "VIC 3163"
+            "",
+            "",
+            "",
+            ""
         ],
         "quote_pickup_suburb": "CARNEGIE",
         "quote_pickup_postcode": "3163"
