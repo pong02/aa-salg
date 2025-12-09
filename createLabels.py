@@ -45,15 +45,11 @@ WAREHOUSE_CONFIG = {
         "postcode": "3163",
         "country": "AU",
         "label_sender_block": [
-            # "IF UNDELIVERED RETURN TO:",
-            # "NexGenAU",
-            # "6/20 Grange Road",
-            # "CARNEGIE",
-            # "VIC 3163"
-            "",
-            "",
-            "",
-            ""
+            "IF UNDELIVERED RETURN TO:",
+            "NexGenAU",
+            "PO BOX 318",
+            "GLEN HUNTLY",
+            "VIC 3163"
         ],
         "quote_pickup_suburb": "CARNEGIE",
         "quote_pickup_postcode": "3163"
