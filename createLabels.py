@@ -39,8 +39,8 @@ WAREHOUSE_CONFIG = {
     "2": {
         "sender_name": "NexGen",
         "sender_email": "nexgenau23@gmail.com",
-        "address_line1": "6/20 Grange Road",
-        "suburb": "Carnegie",
+        "address_line1": "PO BOX 318",
+        "suburb": "Glen Huntly",
         "state_name": "VIC",
         "postcode": "3163",
         "country": "AU",
