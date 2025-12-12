@@ -27,11 +27,16 @@ WAREHOUSE_CONFIG = {
         "postcode": "3810",
         "country": "AU",
         "label_sender_block": [
-            "IF UNDELIVERED RETURN TO:",
-            "GrabNest",
-            "6 Envision Cl",
-            "Pakenham",
-            "VIC 3810"
+            # "IF UNDELIVERED RETURN TO:",
+            # "GrabNest",
+            # "6 Envision Cl",
+            # "Pakenham",
+            # "VIC 3810"
+            "",
+            "",
+            "",
+            "",
+            ""
         ],
         "quote_pickup_suburb": "Pakenham",
         "quote_pickup_postcode": "3810"
