@@ -1,6 +1,6 @@
 import pandas as pd
 from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, A6
 from reportlab.lib.utils import simpleSplit
 import requests
 import base64
@@ -27,16 +27,16 @@ WAREHOUSE_CONFIG = {
         "postcode": "3810",
         "country": "AU",
         "label_sender_block": [
-            # "IF UNDELIVERED RETURN TO:",
-            # "GrabNest",
-            # "6 Envision Cl",
-            # "Pakenham",
-            # "VIC 3810"
-            " ",
-            " ",
-            " ",
-            " ",
-            " "
+            "*IF UNDELIVERED RETURN TO*",
+            "GrabNest",
+            "6 Envision Cl",
+            "Pakenham",
+            "VIC 3810"
+            # " ",
+            # " ",
+            # " ",
+            # " ",
+            # " "
         ],
         "quote_pickup_suburb": "Pakenham",
         "quote_pickup_postcode": "3810"
@@ -50,7 +50,7 @@ WAREHOUSE_CONFIG = {
         "postcode": "3145",
         "country": "AU",
         "label_sender_block": [
-            "IF UNDELIVERED RETURN TO:",
+            "*IF UNDELIVERED RETURN TO*",
             "NexGenAU",
             "14 Derby Road",
             "Caulfield East",
@@ -263,31 +263,110 @@ def draw_wrapped_reference(c, text, x, y, font="Helvetica", size=12, max_width=S
 
 
 def draw_label(c, data, sender_info):
-    width, height = A4
-    margin_left = 90
-    current_y = height - 100
+    page_w, page_h = A4
+    label_w, label_h = A6
 
-    c.setFont("Helvetica", 12)
-    c.drawString(margin_left, current_y, f"To: {data['receiver_name']}")
-    current_y -= LINE_SPACING
-    c.drawString(margin_left, current_y, data['receiver_address_line1'])
-    current_y -= LINE_SPACING
-    c.drawString(margin_left, current_y, data['receiver_suburb'])
-    current_y -= LINE_SPACING
-    c.drawString(margin_left, current_y, f"{data['receiver_state_name']} {data['receiver_postcode']}")
+    PAD_TOP_LEFT = 20
+    PAD_BOTTOM = 50  # 20 + extra 30px as requested
 
-    current_y -= LINE_SPACING * 2
+    # Dock logical A6 top-left inside A4
+    origin_x = PAD_TOP_LEFT
+    origin_y = page_h - label_h - PAD_TOP_LEFT
 
+    def L(x, y):
+        return origin_x + x, origin_y + y
+
+    # =========================
+    # A6-local constants
+    # =========================
+    left = PAD_TOP_LEFT
+    box_width = label_w - 2 * PAD_TOP_LEFT
+
+    TO_FONT = 12.5
+    META_FONT = 8
+
+    cursor_y = label_h - PAD_TOP_LEFT
+
+    # =========================
+    # TO BOX
+    # =========================
+    to_box_height = 95
+
+    c.setLineWidth(1)
+    c.rect(*L(left, cursor_y - to_box_height), box_width, to_box_height)
+
+    x = left + 6
+    y = cursor_y - 14
+
+    c.setFont("Helvetica-Bold", TO_FONT)
+    c.drawString(*L(x, y), "To:")
+    y -= 12
+
+    c.setFont("Helvetica", TO_FONT)
+    c.drawString(*L(x, y), data["receiver_name"])
+    y -= 11
+    c.drawString(*L(x, y), data["receiver_address_line1"])
+    y -= 11
+    c.drawString(*L(x, y), data["receiver_suburb"])
+    y -= 11
+    c.drawString(
+        *L(x, y),
+        f"{data['receiver_state_name']} {data['receiver_postcode']}"
+    )
+
+    cursor_y -= to_box_height + 10
+
+    # =========================
+    # REF BOX
+    # =========================
+    ref_box_height = 45
+
+    c.setLineWidth(0.75)
+    c.rect(*L(left, cursor_y - ref_box_height), box_width, ref_box_height)
+
+    rx = left + 6
+    ry = cursor_y - 14
+
+    c.setFont("Helvetica-Bold", META_FONT)
+    c.drawString(*L(rx, ry), "Ref:")
+    ry -= 10
+
+    c.setFont("Helvetica", META_FONT)
+    draw_wrapped_reference(
+        c,
+        data["customer_reference"],
+        *L(rx, ry),
+        font="Helvetica",
+        size=META_FONT,
+        max_width=box_width - 12
+    )
+
+    # =========================
+    # DEAD ZONE (INTENTIONAL)
+    # =========================
+    # Large white space here on purpose
+
+    # =========================
+    # SENDER BOX (BOTTOM-ANCHORED)
+    # =========================
+    sender_box_height = 90
+    sender_bottom = PAD_BOTTOM
+
+    c.setLineWidth(0.75)
+    c.rect(*L(left, sender_bottom), box_width, sender_box_height)
+
+    sy = sender_bottom + sender_box_height - 14
+
+    c.setFont("Helvetica-Bold", META_FONT)
+    c.drawString(*L(left + 6, sy), "Sender:")
+    sy -= 12
+
+    c.setFont("Helvetica", META_FONT)
     for line in sender_info:
-        c.drawString(margin_left, current_y, line)
-        current_y -= LINE_SPACING
-
-    current_y -= LINE_SPACING * 2
-
-    c.drawString(margin_left, current_y, "Ref:")
-    current_y -= LINE_SPACING
-    return draw_wrapped_reference(c, data["customer_reference"], margin_left, current_y)
-
+        if sy < sender_bottom + 6:
+            break
+        c.drawString(*L(left + 6, sy), line)
+        sy -= 11
 
 # ======================================================================
 # Main Processing
