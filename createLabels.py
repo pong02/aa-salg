@@ -32,11 +32,11 @@ WAREHOUSE_CONFIG = {
             # "6 Envision Cl",
             # "Pakenham",
             # "VIC 3810"
-            "",
-            "",
-            "",
-            "",
-            ""
+            " ",
+            " ",
+            " ",
+            " ",
+            " "
         ],
         "quote_pickup_suburb": "Pakenham",
         "quote_pickup_postcode": "3810"
@@ -44,22 +44,17 @@ WAREHOUSE_CONFIG = {
     "2": {
         "sender_name": "NexGen",
         "sender_email": "nexgenau23@gmail.com",
-        "address_line1": "PO BOX 318",
-        "suburb": "Glen Huntly",
+        "address_line1": "14 Derby Road",
+        "suburb": "Caulfield East",
         "state_name": "VIC",
-        "postcode": "3163",
+        "postcode": "3145",
         "country": "AU",
         "label_sender_block": [
-            # "IF UNDELIVERED RETURN TO:",
-            # "NexGenAU",
-            # "PO BOX 318",
-            # "GLEN HUNTLY",
-            # "VIC 3163"
-            "",
-            "",
-            "",
-            "",
-            ""
+            "IF UNDELIVERED RETURN TO:",
+            "NexGenAU",
+            "14 Derby Road",
+            "Caulfield East",
+            "VIC 3145"
         ],
         "quote_pickup_suburb": "CARNEGIE",
         "quote_pickup_postcode": "3163"
