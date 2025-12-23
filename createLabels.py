@@ -298,7 +298,7 @@ def draw_label(c, data, sender_info):
     x = left + 6
     y = cursor_y - 14
 
-    c.setFont("Helvetica-Bold", TO_FONT)
+    c.setFont("Helvetica-Bold", TO_FONT+1)
     c.drawString(*L(x, y), "To:")
     y -= 12
 
