@@ -221,12 +221,27 @@ def amt_packaging_update(final_label,amt):
         return final_label
 
 def finishUpLabel(label):
+    if not isinstance(label, str):
+        return label
+
+    # NOrmalise x and * (mulitplier)
+    pattern = re.compile(r'(.*?)x(\d+)\s*\*(\d+)')
+
+    def repl(match):
+        code = match.group(1)
+        x_mult = int(match.group(2))
+        qty = int(match.group(3))
+        return f"{code}*{x_mult * qty}"
+
+    label = pattern.sub(repl, label)
+
     label = label.replace(' ', '').replace(',', ', ').replace('*', ' *')
-    
+
     # Add a space after ] if followed by an alphabet
     label = re.sub(r'\](?=[A-Za-z])', '] ', label)
 
     return label.strip()
+
 
 def annotate_phone_model(label):
     """Annotate phone model codes within a label string using PhoneModelMSDB mapping."""
