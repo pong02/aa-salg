@@ -262,111 +262,88 @@ def draw_wrapped_reference(c, text, x, y, font="Helvetica", size=12, max_width=S
     return y
 
 
-def draw_label(c, data, sender_info):
+def draw_label(c, data, sender_info=None):
     page_w, page_h = A4
     label_w, label_h = A6
 
-    PAD_TOP_LEFT = 20
-    PAD_BOTTOM = 50  # 20 + extra 30px as requested
+    PAD = 20
 
-    # Dock logical A6 top-left inside A4
-    origin_x = PAD_TOP_LEFT
-    origin_y = page_h - label_h - PAD_TOP_LEFT
+    # Position A6 inside A4
+    origin_x = PAD
+    origin_y = page_h - label_h - PAD
 
     def L(x, y):
         return origin_x + x, origin_y + y
 
-    # =========================
-    # A6-local constants
-    # =========================
-    left = PAD_TOP_LEFT
-    box_width = label_w - 2 * PAD_TOP_LEFT
-
+    # Original font sizes (no enlargement)
     TO_FONT = 12.5
-    META_FONT = 8
+    REF_FONT = 8
+    HEADER_FONT = 10
 
-    cursor_y = label_h - PAD_TOP_LEFT
+    left = PAD
+    bottom = PAD
+
+    width = label_w - 2 * PAD
+    height = label_h - 2 * PAD
+
+    to_width = width * 0.7
 
     # =========================
-    # TO BOX
+    # TO BLOCK (ROTATED)
     # =========================
-    to_box_height = 95
+    c.saveState()
 
-    c.setLineWidth(1)
-    c.rect(*L(left, cursor_y - to_box_height), box_width, to_box_height)
+    c.translate(*L(left + 10, bottom + 10))
+    c.rotate(90)
 
-    x = left + 6
-    y = cursor_y - 14
+    y = 0
 
-    c.setFont("Helvetica-Bold", TO_FONT+1)
-    c.drawString(*L(x, y), "To:")
-    y -= 12
+    c.setFont("Helvetica-Bold", HEADER_FONT)
+    c.drawString(0, y, "TO")
+    y -= HEADER_FONT + 6
 
     c.setFont("Helvetica", TO_FONT)
-    c.drawString(*L(x, y), data["receiver_name"])
-    y -= 11
-    c.drawString(*L(x, y), data["receiver_address_line1"])
-    y -= 11
-    c.drawString(*L(x, y), data["receiver_suburb"])
-    y -= 11
-    c.drawString(
-        *L(x, y),
+
+    lines = [
+        data["receiver_name"],
+        data["receiver_address_line1"],
+        data["receiver_suburb"],
         f"{data['receiver_state_name']} {data['receiver_postcode']}"
+    ]
+
+    for line in lines:
+        c.drawString(0, y, str(line))
+        y -= TO_FONT + 4
+
+    c.restoreState()
+
+    # =========================
+    # REF BLOCK (ROTATED)
+    # =========================
+    c.saveState()
+
+    c.translate(*L(left + to_width + 10, bottom + 10))
+    c.rotate(90)
+
+    c.setFont("Helvetica-Bold", HEADER_FONT)
+    c.drawString(0, 0, "REF")
+
+    c.setFont("Helvetica", REF_FONT)
+
+    ref_lines = wrap_text(
+        str(data["customer_reference"]),
+        "Helvetica",
+        REF_FONT,
+        height - 40
     )
 
-    cursor_y -= to_box_height + 10
+    y = -(HEADER_FONT + 6)
 
-    # =========================
-    # REF BOX
-    # =========================
-    ref_box_height = 45
+    for line in ref_lines:
+        c.drawString(0, y, line)
+        y -= REF_FONT + 4
 
-    c.setLineWidth(0.75)
-    c.rect(*L(left, cursor_y - ref_box_height), box_width, ref_box_height)
-
-    rx = left + 6
-    ry = cursor_y - 14
-
-    c.setFont("Helvetica-Bold", META_FONT)
-    c.drawString(*L(rx, ry), "Ref:")
-    ry -= 10
-
-    c.setFont("Helvetica", META_FONT)
-    draw_wrapped_reference(
-        c,
-        data["customer_reference"],
-        *L(rx, ry),
-        font="Helvetica",
-        size=META_FONT,
-        max_width=box_width - 12
-    )
-
-    # =========================
-    # DEAD ZONE (INTENTIONAL)
-    # =========================
-    # Large white space here on purpose
-
-    # =========================
-    # SENDER BOX (BOTTOM-ANCHORED)
-    # =========================
-    sender_box_height = 90
-    sender_bottom = PAD_BOTTOM
-
-    c.setLineWidth(0.75)
-    c.rect(*L(left, sender_bottom), box_width, sender_box_height)
-
-    sy = sender_bottom + sender_box_height - 14
-
-    c.setFont("Helvetica-Bold", META_FONT)
-    c.drawString(*L(left + 6, sy), "Sender:")
-    sy -= 12
-
-    c.setFont("Helvetica", META_FONT)
-    for line in sender_info:
-        if sy < sender_bottom + 6:
-            break
-        c.drawString(*L(left + 6, sy), line)
-        sy -= 11
+    c.restoreState()
 
 # ======================================================================
 # Main Processing
