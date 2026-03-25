@@ -3,6 +3,126 @@ import re
 from datetime import datetime
 import os
 
+# =========================
+# eBay dispatch module
+# =========================
+
+def ebay_find_file_case_insensitive(filename):
+    target = filename.lower()
+    for f in os.listdir('.'):
+        if f.lower() == target:
+            return f
+    raise FileNotFoundError(f"File matching '{filename}' (case-insensitive) not found.")
+
+
+def ebay_normalize_tracking_number(x):
+    try:
+        text = str(x).strip()
+        if text.startswith("'"):
+            text = text[1:].strip()
+        if isinstance(x, float) or re.match(r'^\d+(\.\d+)?[eE]\+?\d+$', text):
+            return format(int(float(text)), 'f').rstrip('.0')
+        return text
+    except Exception:
+        return ''
+
+
+def ebay_is_valid_tracking_number(tracking_number):
+    tracking_number = ebay_normalize_tracking_number(tracking_number)
+    if not tracking_number:
+        return False
+    if tracking_number.upper() in {'ELMS', 'NAN', 'NONE'}:
+        return False
+    return bool(re.fullmatch(r'[A-Za-z0-9]{7,30}', tracking_number))
+
+
+def ebay_is_valid_order_number(order_number):
+    return bool(re.fullmatch(r'\d{2}-\d{5}-\d{5}', str(order_number).strip()))
+
+
+def ebay_read_orders_csv(orders_csv_path='ebay_orders.csv'):
+    orders_csv_path = ebay_find_file_case_insensitive(orders_csv_path)
+
+    # eBay exports commonly have a blank first row, then the actual header row
+    df = pd.read_csv(orders_csv_path, dtype=str, header=1)
+    df.columns = df.columns.str.strip()
+
+    required_cols = {
+        'Order Number',
+        'Item Number',
+        'Item Title',
+        'Custom Label',
+        'Transaction ID',
+    }
+    if not required_cols.issubset(df.columns):
+        raise ValueError(f"{orders_csv_path} must contain columns: {required_cols}")
+
+    df['Order Number'] = df['Order Number'].astype(str).str.strip()
+    df = df[df['Order Number'].apply(ebay_is_valid_order_number)].copy()
+
+    return df
+
+
+def ebay_read_tracking_csv(tracking_csv_path='tracking.csv'):
+    tracking_csv_path = ebay_find_file_case_insensitive(tracking_csv_path)
+
+    df = pd.read_csv(tracking_csv_path, dtype=str)
+    df.columns = df.columns.str.strip()
+
+    required_cols = {'ID', 'Tracking Number'}
+    if not required_cols.issubset(df.columns):
+        raise ValueError(f"{tracking_csv_path} must contain columns: {required_cols}")
+
+    df['ID'] = df['ID'].astype(str).str.strip()
+    df['Tracking Number'] = df['Tracking Number'].apply(ebay_normalize_tracking_number)
+
+    df = df[df['ID'].apply(ebay_is_valid_order_number)].copy()
+    df = df[df['Tracking Number'].apply(ebay_is_valid_tracking_number)].copy()
+
+    return df
+
+
+def generate_ebay_dispatch_file(
+    orders_csv_path='ebay_orders.csv',
+    tracking_csv_path='tracking.csv',
+    output_csv_path='eBayDispatch.csv'
+):
+    orders_df = ebay_read_orders_csv(orders_csv_path)
+    tracking_df = ebay_read_tracking_csv(tracking_csv_path)
+
+    merged_df = pd.merge(
+        orders_df[['Order Number', 'Item Number', 'Item Title', 'Custom Label', 'Transaction ID']],
+        tracking_df[['ID', 'Tracking Number']],
+        left_on='Order Number',
+        right_on='ID',
+        how='inner'
+    )
+
+    merged_df = merged_df.drop_duplicates(
+        subset=['Order Number', 'Item Number', 'Transaction ID']
+    ).copy()
+
+    output_df = pd.DataFrame({
+        'Shipping Status': [''] * len(merged_df),
+        'Order Number': merged_df['Order Number'],
+        'Item Number': merged_df['Item Number'],
+        'Item Title': merged_df['Item Title'],
+        'Custom Label': merged_df['Custom Label'],
+        'Transaction ID': merged_df['Transaction ID'],
+        'Shipping Carrier Used': 'Australia Post',
+        'Tracking Number': merged_df['Tracking Number'],
+    })
+
+    with open(output_csv_path, 'w', newline='', encoding='utf-8') as f:
+        f.write('#INFO,,,,,,,\n')
+        output_df.to_csv(f, index=False)
+
+    print(f"eBay dispatch file saved to: {output_csv_path} ({len(output_df)} rows)")
+
+# =========================
+# kogan dispatch module
+# =========================
+
 def trim_to_tmp(val):
         if isinstance(val, str):
             pos = val.find('TMP')
@@ -136,10 +256,42 @@ def generate_dispatch_file_with_tracking(merged_csv_path, kogan_csv_path, tracki
     final_df.to_csv(dispatch_csv_path, index=False)
     print(f"Dispatch file saved to: {dispatch_csv_path}")
 
-merged_csv = 'merged_labels.csv'
-kogan_csv = 'kogan_orders.csv'
-tracking_csv = 'tracking.csv'
-dispatch_csv = 'koganDispatch.csv'
+if __name__ == '__main__':
+    # Kogan dispatch generation
+    try:
+        if (
+            any(f.lower() == 'merged_labels.csv' for f in os.listdir('.')) and
+            any(f.lower() == 'kogan_orders.csv' for f in os.listdir('.')) and
+            any(f.lower() == 'tracking.csv' for f in os.listdir('.'))
+        ):
+            merged_csv = 'merged_labels.csv'
+            kogan_csv = 'kogan_orders.csv'
+            tracking_csv = 'tracking.csv'
+            dispatch_csv = 'koganDispatch.csv'
 
+            generate_dispatch_file_with_tracking(
+                merged_csv,
+                kogan_csv,
+                tracking_csv,
+                dispatch_csv
+            )
+        else:
+            print('Skipping Kogan dispatch generation: merged_labels.csv, kogan_orders.csv, or tracking.csv not found.')
+    except Exception as e:
+        print(f'Kogan dispatch generation failed: {e}')
 
-generate_dispatch_file_with_tracking(merged_csv, kogan_csv, tracking_csv, dispatch_csv)
+    # eBay dispatch generation
+    try:
+        if (
+            any(f.lower() == 'ebay_orders.csv' for f in os.listdir('.')) and
+            any(f.lower() == 'tracking.csv' for f in os.listdir('.'))
+        ):
+            generate_ebay_dispatch_file(
+                orders_csv_path='ebay_orders.csv',
+                tracking_csv_path='tracking.csv',
+                output_csv_path='eBayDispatch.csv'
+            )
+        else:
+            print('Skipping eBay dispatch generation: ebay_orders.csv or tracking.csv not found.')
+    except Exception as e:
+        print(f'eBay dispatch generation failed: {e}')
