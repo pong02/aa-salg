@@ -65,6 +65,7 @@ WAREHOUSE_CONFIG = {
 # Constants
 # ======================================================================
 
+SENDLE_ENABLED = False
 CSV_FILENAME = "sendle_batch_csv_template.csv"
 OUTPUT_FILENAME = f"{datetime.now().strftime('%Y%m%d')}_basic.pdf"
 LINE_SPACING = 14
@@ -104,6 +105,14 @@ SENDLE_API_ORDER_URL = "https://api.sendle.com/api/orders"
 # ======================================================================
 
 def get_sendle_quote(pickup_suburb, pickup_postcode, delivery_suburb, delivery_postcode, weight, length, width, height):
+    if not SENDLE_ENABLED:
+        return {
+            "quote": {
+                "gross": {
+                    "amount": 404  # force above threshold
+                }
+            }
+        } 
     payload = {
         "pickup_suburb": pickup_suburb,
         "pickup_postcode": pickup_postcode,
