@@ -25,7 +25,7 @@ COLUMN_MAPPING = {
     },
     'ebay': {
         'order number': 'id', 'buyer username': 'buyer_username',
-        'postage service': 'shipping_method', 'quantity': 'Quantity',
+        'shipping service': 'shipping_method', 'quantity': 'Quantity',
         'custom label': 'custom_label', 'ship to name': 'rname',
         'ship to address 1': 'address1', 'ship to address 2': 'address2',
         'ship to city': 'city', 'ship to state': 'state',
